@@ -1,0 +1,45 @@
+﻿<section class="page-head">
+  <div>
+    <span class="badge">Requester</span>
+    <h1 class="page-title">New Expense Request</h1>
+    <p class="page-subtitle">Creates a localStorage request that can move through endorsement, approval, and Finance processing.</p>
+  </div>
+  <a routerLink="/requests">Back to Requests</a>
+</section>
+
+<form class="grid form-grid" [formGroup]="form">
+  <section class="card form-section">
+    <h2>Request Header</h2>
+    <label>Title<input formControlName="title" /></label>
+    <label>Justification<textarea formControlName="justification" rows="4"></textarea></label>
+    <div class="two-col">
+      <label>Department<select formControlName="department"><option>IT Operations</option><option>Cybersecurity</option><option>Infrastructure</option></select></label>
+      <label>Cost Center<select formControlName="costCenter"><option>CC-IT-001</option><option>CC-IT-002</option><option>CC-IT-003</option></select></label>
+    </div>
+    <div class="two-col">
+      <label>Project<input formControlName="project" placeholder="Optional" /></label>
+      <label>Type<select formControlName="requestType"><option>Expense</option><option>Purchase</option><option>Reimbursement</option></select></label>
+    </div>
+    <label class="check"><input type="checkbox" formControlName="urgent" /> Mark as urgent</label>
+  </section>
+
+  <section class="card form-section">
+    <h2>Line Item</h2>
+    <div class="two-col">
+      <label>Category<select formControlName="category"><option>Hardware</option><option>Software</option><option>Cloud Services</option></select></label>
+      <label>Vendor<input formControlName="vendor" /></label>
+    </div>
+    <label>Description<input formControlName="description" /></label>
+    <div class="two-col">
+      <label>Quantity<input type="number" formControlName="quantity" min="1" /></label>
+      <label>Unit Amount<input type="number" formControlName="unitAmount" min="1" /></label>
+    </div>
+    <label>Seller Link<input formControlName="sellerLink" placeholder="https://..." /></label>
+    <div class="total-box">Total: PHP {{ total.toLocaleString() }}</div>
+  </section>
+
+  <section class="actions">
+    <button type="button" class="secondary-button" (click)="saveDraft()">Save Draft</button>
+    <button type="button" class="primary-button" (click)="submit()">Submit Request</button>
+  </section>
+</form>

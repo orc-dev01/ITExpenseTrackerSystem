@@ -1,0 +1,31 @@
+﻿<div class="shell">
+  <aside class="sidebar" aria-label="Main navigation">
+    <div class="brand">
+      <span class="brand-mark">IT</span>
+      <span><strong>IT Expense</strong><small>EPMS</small></span>
+    </div>
+
+    <nav class="nav-list">
+      @for (item of navItems(); track item.path) {
+        <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.exact ?? false }">
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+  </aside>
+
+  <section class="workspace">
+    <header class="topbar">
+      <div>
+        <strong>{{ user()?.fullName ?? 'User' }}</strong>
+        <span>{{ user()?.email ?? 'Backend session pending' }}</span>
+      </div>
+      <button type="button" (click)="logout()">Logout</button>
+    </header>
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </section>
+</div>
+

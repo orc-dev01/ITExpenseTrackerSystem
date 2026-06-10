@@ -1,0 +1,87 @@
+﻿@if (data$ | async; as data) {
+  @let mock = moduleData(data['mockKey']);
+
+  <section class="feature-header">
+    <div class="title-block">
+      <span class="badge">{{ data['phase'] ?? 'Phase 1' }}</span>
+      <h1 class="page-title">{{ data['title'] }}</h1>
+      <p class="page-subtitle">{{ data['subtitle'] }}</p>
+    </div>
+
+    @if (data['primaryAction']) {
+      <button class="primary-action" type="button">{{ data['primaryAction'] }}</button>
+    }
+  </section>
+
+  @if (mock?.metrics?.length) {
+    <section class="metric-grid" aria-label="Module metrics">
+      @for (metric of mock?.metrics; track metric.label) {
+        <article class="metric-card" [class]="'tone-' + metric.tone">
+          <span>{{ metric.label }}</span>
+          <strong>{{ metric.value }}</strong>
+        </article>
+      }
+    </section>
+  }
+
+  <div class="grid overview-grid">
+    <article class="card">
+      <h2>How This Module Is Used</h2>
+      <ul>
+        @for (item of data['capabilities']; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+    </article>
+
+    <article class="card">
+      <h2>API Hooks</h2>
+      <ul class="endpoint-list">
+        @for (endpoint of data['endpoints']; track endpoint) {
+          <li><code>{{ endpoint }}</code></li>
+        }
+      </ul>
+    </article>
+  </div>
+
+  @if (mock) {
+    <section class="tables-section">
+      @for (table of mock.tables; track table.title) {
+        <article class="card data-card">
+          <h2>{{ table.title }}</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  @for (column of table.columns; track column) {
+                    <th>{{ column }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of table.rows; track $index) {
+                  <tr>
+                    @for (column of table.columns; track column) {
+                      <td>{{ rowValue(row, column) }}</td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </article>
+      }
+    </section>
+
+    @if (mock.notes?.length) {
+      <article class="card notes-card">
+        <h2>Implementation Notes</h2>
+        <ul>
+          @for (note of mock.notes; track note) {
+            <li>{{ note }}</li>
+          }
+        </ul>
+      </article>
+    }
+  }
+}

@@ -1,0 +1,83 @@
+﻿<section class="page-head">
+  <div>
+    <span class="badge">LocalStorage Mock</span>
+    <h1 class="page-title">Expense Requests</h1>
+    <p class="page-subtitle">Signed in as {{ user()?.fullName }} with role(s): {{ roles().join(', ') }}</p>
+  </div>
+
+  <div class="head-actions">
+    @if (canCreate()) {
+      <a class="primary-link" routerLink="/requests/new">New Request</a>
+    }
+    <button type="button" class="secondary-button" (click)="reset()">Reset Mock Data</button>
+  </div>
+</section>
+
+<section class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Request No</th>
+          <th>Title</th>
+          <th>Requester</th>
+          <th>Department</th>
+          <th>Status</th>
+          <th>Amount</th>
+          <th>Urgent</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (request of requests(); track request.id) {
+          <tr>
+            <td>{{ request.requestNumber }}</td>
+            <td>
+              <strong>{{ request.title }}</strong>
+              <small>{{ request.justification }}</small>
+            </td>
+            <td>{{ request.requesterName }}</td>
+            <td>{{ request.department }}</td>
+            <td><span class="status">{{ request.status }}</span></td>
+            <td>PHP {{ request.totalAmount.toLocaleString() }}</td>
+            <td>{{ request.urgent ? 'Yes' : 'No' }}</td>
+            <td>
+              <div class="row-actions">
+                @for (action of actionsFor(request); track action) {
+                  @if (action !== 'reset') {
+                    <button type="button" (click)="runAction(action, request)">{{ action }}</button>
+                  }
+                }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="8">No requests visible for this role yet.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="grid helper-grid">
+  <article class="card">
+    <h2>How To Test</h2>
+    <ul>
+      <li>Login as Requester and create a request.</li>
+      <li>Logout and login as Endorser to endorse the request.</li>
+      <li>Logout and login as Approver to approve it.</li>
+      <li>Logout and login as Finance Viewer to close it.</li>
+    </ul>
+  </article>
+
+  <article class="card">
+    <h2>Storage Keys</h2>
+    <ul>
+      <li><code>IT_EXPENSE_REQUESTS</code></li>
+      <li><code>IT_EXPENSE_AUDIT_LOG</code></li>
+      <li><code>IT_EXPENSE_SESSION</code></li>
+    </ul>
+  </article>
+</section>

@@ -1,0 +1,134 @@
+﻿<section class="report-toolbar no-print">
+  <div>
+    <span class="badge">Approver/Admin</span>
+    <h1 class="page-title">Approval PDF Report</h1>
+    <p class="page-subtitle">Choose filters, grouping, and columns before exporting CSV or printing to PDF.</p>
+  </div>
+
+  <div class="toolbar-actions">
+    <label>
+      Department
+      <select [ngModel]="departmentFilter()" (ngModelChange)="setDepartment($event)">
+        @for (department of departments(); track department) {
+          <option [value]="department">{{ department }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Status
+      <select [ngModel]="statusFilter()" (ngModelChange)="setStatus($event)">
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ status }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="toggle-option">
+      <input type="checkbox" [ngModel]="groupByRequester()" (ngModelChange)="setGroupByRequester($event)" />
+      Group by requester
+    </label>
+
+    <details class="column-picker">
+      <summary>Columns</summary>
+      <div class="column-panel">
+        @for (column of columns; track column.key) {
+          <label class="column-option">
+            <input type="checkbox" [checked]="isColumnSelected(column.key)" (change)="toggleColumn(column.key, $any($event.target).checked)" />
+            {{ column.label }}
+          </label>
+        }
+      </div>
+    </details>
+
+    <button type="button" class="secondary-button" (click)="exportCsv()">Export CSV</button>
+    <button type="button" class="primary-button" (click)="printPdf()">Print / Save PDF</button>
+  </div>
+</section>
+
+<section class="print-sheet">
+  <header class="print-header">
+    <div>
+      <h2>IT Expense Approval Report</h2>
+      <p>Prepared for {{ user()?.fullName ?? 'Approver' }}</p>
+    </div>
+    <div class="print-meta">
+      <span>Department: {{ departmentFilter() }}</span>
+      <span>Status: {{ statusFilter() }}</span>
+      <span>Grouped by requester: {{ groupByRequester() ? 'Yes' : 'No' }}</span>
+      <span>Columns: {{ selectedColumns().length }}</span>
+      <span>Generated: {{ generatedAt }}</span>
+    </div>
+  </header>
+
+  <section class="summary-grid">
+    <article>
+      <span>Total Requests</span>
+      <strong>{{ filteredRequests().length }}</strong>
+    </article>
+    <article>
+      <span>Total Amount</span>
+      <strong>{{ formatCurrency(totalAmount()) }}</strong>
+    </article>
+    <article>
+      <span>Approved/Closed</span>
+      <strong>{{ formatCurrency(approvedAmount()) }}</strong>
+    </article>
+    <article>
+      <span>Pending</span>
+      <strong>{{ formatCurrency(pendingAmount()) }}</strong>
+    </article>
+  </section>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          @for (column of selectedColumns(); track column.key) {
+            <th>{{ column.label }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @if (groupByRequester()) {
+          @for (group of groupedRequests(); track group.requesterName) {
+            <tr class="group-row">
+              <td [attr.colspan]="selectedColumns().length">Requester: {{ group.requesterName }}</td>
+            </tr>
+            @for (request of group.requests; track trackRequest($index, request)) {
+              <tr>
+                @for (column of selectedColumns(); track column.key) {
+                  <td>{{ column.value(request) }}</td>
+                }
+              </tr>
+            }
+            <tr class="subtotal-row">
+              <td [attr.colspan]="selectedColumns().length - 1">Subtotal for {{ group.requesterName }}</td>
+              <td>{{ formatCurrency(group.subtotal) }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="selectedColumns().length">No records match the selected filters.</td>
+            </tr>
+          }
+        } @else {
+          @for (request of filteredRequests(); track trackRequest($index, request)) {
+            <tr>
+              @for (column of selectedColumns(); track column.key) {
+                <td>{{ column.value(request) }}</td>
+              }
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="selectedColumns().length">No records match the selected filters.</td>
+            </tr>
+          }
+        }
+        <tr class="grand-total-row">
+          <td [attr.colspan]="selectedColumns().length - 1">Grand Total</td>
+          <td>{{ formatCurrency(totalAmount()) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
