@@ -1,0 +1,39 @@
+@if (isOpen && request) {
+  <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true" [attr.aria-labelledby]="'remarks-modal-title'">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-title h5" id="remarks-modal-title">{{ title }}</h2>
+            <p class="text-secondary mb-0 small">{{ request.requestNumber }} - {{ request.title }}</p>
+          </div>
+          <button type="button" class="btn-close" aria-label="Close" (click)="close()"></button>
+        </div>
+
+        <div class="modal-body">
+          <p class="text-secondary">{{ helperText }}</p>
+          <label class="form-label" for="remarks">Remarks</label>
+          <textarea
+            id="remarks"
+            class="form-control"
+            [class.is-invalid]="hasError"
+            rows="5"
+            [(ngModel)]="remarks"
+            placeholder="Enter clear remarks for the requester"
+          ></textarea>
+          @if (hasError) {
+            <div class="invalid-feedback d-block">Remarks are required for this action.</div>
+          }
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" (click)="close()">Cancel</button>
+          <button type="button" class="btn" [class.btn-warning]="action === 'return'" [class.btn-danger]="action === 'reject'" (click)="confirm()">
+            {{ actionLabel }} Request
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop show"></div>
+}

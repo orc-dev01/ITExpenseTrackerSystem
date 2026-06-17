@@ -10,6 +10,8 @@
     createDraft: '/expense-requests/drafts',
     submit: '/expense-requests/submit',
     detail: (id: string | number) => `/expense-requests/${id}`,
+    updateDraft: (id: string | number) => `/expense-requests/${id}/draft`,
+    deleteDraft: (id: string | number) => `/expense-requests/${id}/draft`,
     cancel: (id: string | number) => `/expense-requests/${id}/cancel`,
     lineItems: (requestId: string | number) => `/expense-requests/${requestId}/line-items`,
     attachments: (requestId: string | number, lineItemId: string | number) => `/expense-requests/${requestId}/line-items/${lineItemId}/attachments`,

@@ -56,7 +56,7 @@ export interface CreateRequestCommand {
   project?: string;
   requestType: RequestType;
   urgent: boolean;
-  lineItem: Omit<LocalExpenseLineItem, 'id' | 'lineTotal'>;
+  lineItems: Omit<LocalExpenseLineItem, 'id' | 'lineTotal'>[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -75,7 +75,12 @@ export class RequestStoreService {
       throw new Error('No current user.');
     }
 
-    const lineTotal = command.lineItem.quantity * command.lineItem.unitAmount;
+    const lineItems = command.lineItems.map((item) => ({
+      ...item,
+      id: crypto.randomUUID(),
+      lineTotal: item.quantity * item.unitAmount
+    }));
+    const totalAmount = lineItems.reduce((sum, item) => sum + item.lineTotal, 0);
     const now = new Date().toISOString();
     const request: LocalExpenseRequest = {
       id: crypto.randomUUID(),
@@ -90,8 +95,8 @@ export class RequestStoreService {
       requestType: command.requestType,
       status: submit ? 'PendingEndorsement' : 'Draft',
       urgent: command.urgent,
-      totalAmount: lineTotal,
-      lineItems: [{ ...command.lineItem, id: crypto.randomUUID(), lineTotal }],
+      totalAmount,
+      lineItems,
       createdAt: now,
       submittedAt: submit ? now : undefined,
       updatedAt: now
@@ -102,8 +107,50 @@ export class RequestStoreService {
     return request;
   }
 
+  updateDraft(id: string, command: CreateRequestCommand): LocalExpenseRequest | null {
+    const existing = this.requestState().find((request) => request.id === id);
+    if (!existing || existing.status !== 'Draft') {
+      return null;
+    }
+
+    const lineItems = command.lineItems.map((item) => ({
+      ...item,
+      id: crypto.randomUUID(),
+      lineTotal: item.quantity * item.unitAmount
+    }));
+    const totalAmount = lineItems.reduce((sum, item) => sum + item.lineTotal, 0);
+    const updated: LocalExpenseRequest = {
+      ...existing,
+      title: command.title,
+      justification: command.justification,
+      department: command.department,
+      costCenter: command.costCenter,
+      project: command.project,
+      requestType: command.requestType,
+      urgent: command.urgent,
+      totalAmount,
+      lineItems,
+      updatedAt: new Date().toISOString()
+    };
+
+    this.saveRequests(this.requestState().map((request) => (request.id === id ? updated : request)));
+    this.addLog(updated, 'Updated Draft');
+    return updated;
+  }
+
   submit(id: string): void {
     this.transition(id, 'PendingEndorsement', 'Submitted');
+  }
+
+  deleteDraft(id: string): void {
+    const request = this.requestState().find((item) => item.id === id);
+    if (!request || request.status !== 'Draft') {
+      return;
+    }
+
+    this.requestState.set(this.requestState().filter((item) => item.id !== id));
+    this.auditState.set(this.auditState().filter((log) => log.requestId !== id));
+    this.persist();
   }
 
   cancel(id: string): void {
@@ -114,12 +161,12 @@ export class RequestStoreService {
     this.transition(id, 'PendingApproval', 'Endorsed');
   }
 
-  returnRequest(id: string): void {
-    this.transition(id, 'Returned', 'Returned', 'Needs revision.');
+  returnRequest(id: string, remarks = 'Needs revision.'): void {
+    this.transition(id, 'Returned', 'Returned', remarks);
   }
 
-  reject(id: string): void {
-    this.transition(id, 'Rejected', 'Rejected', 'Rejected during review.');
+  reject(id: string, remarks = 'Rejected during review.'): void {
+    this.transition(id, 'Rejected', 'Rejected', remarks);
   }
 
   approve(id: string): void {
@@ -133,28 +180,30 @@ export class RequestStoreService {
   resetMockData(): void {
     localStorage.removeItem(REQUEST_STORAGE_KEY);
     localStorage.removeItem(AUDIT_STORAGE_KEY);
-    this.requestState.set(this.seedRequests());
-    this.auditState.set([]);
+    const requests = this.seedRequests();
+    this.requestState.set(requests);
+    this.auditState.set(this.seedAuditLogs(requests));
     this.persist();
   }
 
   canAct(status: ExpenseRequestStatus, roles: UserRole[]): string[] {
-    if (roles.includes('Admin')) {
-      return ['reset'];
-    }
+    const actions: string[] = [];
     if (roles.includes('Requester') && status === 'Draft') {
-      return ['submit', 'cancel'];
+      actions.push('edit', 'submit', 'delete');
     }
     if (roles.includes('Endorser') && status === 'PendingEndorsement') {
-      return ['endorse', 'return', 'reject'];
+      actions.push('endorse', 'return', 'reject');
     }
     if (roles.includes('Approver') && status === 'PendingApproval') {
-      return ['approve', 'return', 'reject'];
+      actions.push('approve', 'return', 'reject');
     }
     if (roles.includes('FinanceViewer') && status === 'Approved') {
-      return ['close'];
+      actions.push('close');
     }
-    return [];
+    if (roles.includes('Admin')) {
+      actions.push('reset');
+    }
+    return actions;
   }
 
   private transition(id: string, status: ExpenseRequestStatus, action: string, remarks?: string): void {
@@ -242,12 +291,22 @@ export class RequestStoreService {
   private loadAuditLogs(): LocalAuditLog[] {
     const raw = localStorage.getItem(AUDIT_STORAGE_KEY);
     if (!raw) {
-      return [];
+      const seed = this.seedAuditLogs(this.requestState());
+      localStorage.setItem(AUDIT_STORAGE_KEY, JSON.stringify(seed));
+      return seed;
     }
     try {
-      return JSON.parse(raw) as LocalAuditLog[];
+      const logs = JSON.parse(raw) as LocalAuditLog[];
+      if (logs.length > 0) {
+        return logs;
+      }
+      const seed = this.seedAuditLogs(this.requestState());
+      localStorage.setItem(AUDIT_STORAGE_KEY, JSON.stringify(seed));
+      return seed;
     } catch {
-      return [];
+      const seed = this.seedAuditLogs(this.requestState());
+      localStorage.setItem(AUDIT_STORAGE_KEY, JSON.stringify(seed));
+      return seed;
     }
   }
 
@@ -274,6 +333,41 @@ export class RequestStoreService {
       this.seedRequest('EXP-2026-000039', 'Replacement docking stations', 'Ana Lim', 'usr-seed-003', 'IT Operations', 'Hardware', 42000, 'Approved', false, now),
       this.seedRequest('DRAFT', 'USB security keys', 'Mia Santos', 'usr-requester-001', 'Cybersecurity', 'Hardware', 18000, 'Draft', false, now)
     ];
+  }
+
+  private seedAuditLogs(requests: LocalExpenseRequest[]): LocalAuditLog[] {
+    const logs: LocalAuditLog[] = [];
+    for (const request of requests) {
+      if (request.status !== 'Draft') {
+        logs.push(this.seedLog(request, 'Submitted', request.requesterName, 'Requester', 'Seeded request submitted for workflow testing.'));
+      }
+      if (request.status === 'PendingApproval' || request.status === 'Approved' || request.status === 'Closed') {
+        logs.push(this.seedLog(request, 'Endorsed', 'Noel Tan', 'Endorser', 'Validated request details.'));
+      }
+      if (request.status === 'Approved' || request.status === 'Closed') {
+        logs.push(this.seedLog(request, 'Approved', 'Ramon Cruz', 'Approver', 'Approved for processing.'));
+      }
+      if (request.status === 'Closed') {
+        logs.push(this.seedLog(request, 'Closed', 'Paula Dizon', 'FinanceViewer', 'Marked processed by Finance.'));
+      }
+      if (request.status === 'Draft') {
+        logs.push(this.seedLog(request, 'Saved Draft', request.requesterName, 'Requester'));
+      }
+    }
+    return logs.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+  }
+
+  private seedLog(request: LocalExpenseRequest, action: string, actorName: string, actorRole: string, remarks?: string): LocalAuditLog {
+    return {
+      id: crypto.randomUUID(),
+      requestId: request.id,
+      requestNumber: request.requestNumber,
+      actorName,
+      actorRole,
+      action,
+      remarks,
+      createdAt: request.updatedAt
+    };
   }
 
   private seedRequest(requestNumber: string, title: string, requesterName: string, requesterId: string, department: string, category: string, amount: number, status: ExpenseRequestStatus, urgent: boolean, now: string): LocalExpenseRequest {

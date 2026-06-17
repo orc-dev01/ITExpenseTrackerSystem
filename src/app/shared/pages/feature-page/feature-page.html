@@ -1,86 +1,102 @@
-﻿@if (data$ | async; as data) {
+@if (data$ | async; as data) {
   @let mock = moduleData(data['mockKey']);
 
-  <section class="feature-header">
+  <section class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
     <div class="title-block">
-      <span class="badge">{{ data['phase'] ?? 'Phase 1' }}</span>
+      <span class="badge rounded-pill text-bg-primary w-fit">{{ data['phase'] ?? 'Phase 1' }}</span>
       <h1 class="page-title">{{ data['title'] }}</h1>
       <p class="page-subtitle">{{ data['subtitle'] }}</p>
     </div>
 
     @if (data['primaryAction']) {
-      <button class="primary-action" type="button">{{ data['primaryAction'] }}</button>
+      <button class="btn btn-primary" type="button">{{ data['primaryAction'] }}</button>
     }
   </section>
 
   @if (mock?.metrics?.length) {
-    <section class="metric-grid" aria-label="Module metrics">
+    <section class="row g-3 mb-3" aria-label="Module metrics">
       @for (metric of mock?.metrics; track metric.label) {
-        <article class="metric-card" [class]="'tone-' + metric.tone">
-          <span>{{ metric.label }}</span>
-          <strong>{{ metric.value }}</strong>
-        </article>
+        <div class="col-12 col-sm-6 col-xl-3">
+          <article class="metric-card card h-100" [class]="'tone-' + metric.tone">
+            <div class="card-body">
+              <span class="small text-secondary fw-semibold">{{ metric.label }}</span>
+              <strong class="d-block fs-4 mt-2">{{ metric.value }}</strong>
+            </div>
+          </article>
+        </div>
       }
     </section>
   }
 
-  <div class="grid overview-grid">
-    <article class="card">
-      <h2>How This Module Is Used</h2>
-      <ul>
-        @for (item of data['capabilities']; track item) {
-          <li>{{ item }}</li>
-        }
-      </ul>
+  <div class="row g-3 mb-3">
+    <article class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6">How This Module Is Used</h2>
+          <ul>
+            @for (item of data['capabilities']; track item) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        </div>
+      </div>
     </article>
 
-    <article class="card">
-      <h2>API Hooks</h2>
-      <ul class="endpoint-list">
-        @for (endpoint of data['endpoints']; track endpoint) {
-          <li><code>{{ endpoint }}</code></li>
-        }
-      </ul>
+    <article class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6">API Hooks</h2>
+          <ul class="endpoint-list">
+            @for (endpoint of data['endpoints']; track endpoint) {
+              <li><code class="app-code">{{ endpoint }}</code></li>
+            }
+          </ul>
+        </div>
+      </div>
     </article>
   </div>
 
   @if (mock) {
-    <section class="tables-section">
+    <section class="d-grid gap-3">
       @for (table of mock.tables; track table.title) {
-        <article class="card data-card">
-          <h2>{{ table.title }}</h2>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  @for (column of table.columns; track column) {
-                    <th>{{ column }}</th>
-                  }
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of table.rows; track $index) {
+        <article class="card">
+          <div class="card-body">
+            <h2 class="h6 mb-3">{{ table.title }}</h2>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle app-table mb-0">
+                <thead>
                   <tr>
                     @for (column of table.columns; track column) {
-                      <td>{{ rowValue(row, column) }}</td>
+                      <th>{{ column }}</th>
                     }
                   </tr>
-                }
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  @for (row of table.rows; track $index) {
+                    <tr>
+                      @for (column of table.columns; track column) {
+                        <td>{{ rowValue(row, column) }}</td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           </div>
         </article>
       }
     </section>
 
     @if (mock.notes?.length) {
-      <article class="card notes-card">
-        <h2>Implementation Notes</h2>
-        <ul>
-          @for (note of mock.notes; track note) {
-            <li>{{ note }}</li>
-          }
-        </ul>
+      <article class="card mt-3">
+        <div class="card-body">
+          <h2 class="h6">Implementation Notes</h2>
+          <ul>
+            @for (note of mock.notes; track note) {
+              <li>{{ note }}</li>
+            }
+          </ul>
+        </div>
       </article>
     }
   }

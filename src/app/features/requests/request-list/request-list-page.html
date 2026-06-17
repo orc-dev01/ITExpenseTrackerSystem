@@ -1,21 +1,33 @@
-﻿<section class="page-head">
+<section
+  class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3"
+>
   <div>
-    <span class="badge">LocalStorage Mock</span>
+    <span class="badge rounded-pill text-bg-secondary">LocalStorage Mock</span>
     <h1 class="page-title">Expense Requests</h1>
-    <p class="page-subtitle">Signed in as {{ user()?.fullName }} with role(s): {{ roles().join(', ') }}</p>
+    <p class="page-subtitle">
+      Signed in as {{ user()?.fullName }} with role(s): {{ roles().join(', ') }}
+    </p>
   </div>
 
-  <div class="head-actions">
+  <div class="d-flex flex-wrap gap-2 justify-content-end">
     @if (canCreate()) {
-      <a class="primary-link" routerLink="/requests/new">New Request</a>
+    <a class="btn btn-primary" routerLink="/requests/new">New Request</a>
     }
-    <button type="button" class="secondary-button" (click)="reset()">Reset Mock Data</button>
+    <button type="button" class="btn btn-outline-secondary" (click)="reset()">
+      Reset Mock Data
+    </button>
   </div>
 </section>
 
-<section class="card">
-  <div class="table-wrap">
-    <table>
+<!-- <section class="card">
+  <div class="card-body">
+ 
+  </div>
+</section> -->
+
+<section>
+  <div class="table-responsive">
+    <table class="table table-hover app-table mb-0">
       <thead>
         <tr>
           <th>Request No</th>
@@ -30,54 +42,90 @@
       </thead>
       <tbody>
         @for (request of requests(); track request.id) {
-          <tr>
-            <td>{{ request.requestNumber }}</td>
-            <td>
-              <strong>{{ request.title }}</strong>
-              <small>{{ request.justification }}</small>
-            </td>
-            <td>{{ request.requesterName }}</td>
-            <td>{{ request.department }}</td>
-            <td><span class="status">{{ request.status }}</span></td>
-            <td>PHP {{ request.totalAmount.toLocaleString() }}</td>
-            <td>{{ request.urgent ? 'Yes' : 'No' }}</td>
-            <td>
-              <div class="row-actions">
-                @for (action of actionsFor(request); track action) {
-                  @if (action !== 'reset') {
-                    <button type="button" (click)="runAction(action, request)">{{ action }}</button>
-                  }
-                }
-              </div>
-            </td>
-          </tr>
+        <tr
+          class="clickable-row"
+          (click)="openRequest(request)"
+          style="cursor: pointer"
+        >
+          <td>
+            <a class="fw-semibold" [routerLink]="['/requests', request.id]"
+              >{{ request.requestNumber }}</a
+            >
+          </td>
+          <td>
+            <h6>{{ request.title }}</h6>
+            <small class="d-block mt-1 text-secondary"
+              >{{ request.justification }}</small
+            >
+          </td>
+          <td>{{ request.requesterName }}</td>
+          <td>{{ request.department }}</td>
+          <td>
+            <span class="badge rounded-pill text-bg-light border"
+              >{{ request.status }}</span
+            >
+          </td>
+          <td>PHP {{ request.totalAmount.toLocaleString() }}</td>
+          <td>{{ request.urgent ? 'Yes' : 'No' }}</td>
+          <td>
+            <div class="d-flex flex-wrap gap-1">
+              @for (action of actionsFor(request); track action) { @if (action
+              !== 'reset') {
+              <button
+                class="btn btn-sm btn-outline-primary text-capitalize"
+                type="button"
+                (click)="runAction(action, request); $event.stopPropagation()"
+              >
+                {{ action }}
+              </button>
+              } }
+            </div>
+          </td>
+        </tr>
         } @empty {
-          <tr>
-            <td colspan="8">No requests visible for this role yet.</td>
-          </tr>
+        <tr>
+          <td colspan="8" class="text-secondary">
+            No requests visible for this role yet.
+          </td>
+        </tr>
         }
       </tbody>
     </table>
   </div>
 </section>
 
-<section class="grid helper-grid">
-  <article class="card">
-    <h2>How To Test</h2>
-    <ul>
-      <li>Login as Requester and create a request.</li>
-      <li>Logout and login as Endorser to endorse the request.</li>
-      <li>Logout and login as Approver to approve it.</li>
-      <li>Logout and login as Finance Viewer to close it.</li>
-    </ul>
+<section class="row g-3 mt-1">
+  <article class="col-12 col-lg-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h6">How To Test</h2>
+        <ul class="text-secondary mb-0">
+          <li>Login as Requester and create a request.</li>
+          <li>Logout and login as Endorser to endorse the request.</li>
+          <li>Logout and login as Approver to approve it.</li>
+          <li>Logout and login as Finance Viewer to close it.</li>
+        </ul>
+      </div>
+    </div>
   </article>
 
-  <article class="card">
-    <h2>Storage Keys</h2>
-    <ul>
-      <li><code>IT_EXPENSE_REQUESTS</code></li>
-      <li><code>IT_EXPENSE_AUDIT_LOG</code></li>
-      <li><code>IT_EXPENSE_SESSION</code></li>
-    </ul>
+  <article class="col-12 col-lg-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h6">Storage Keys</h2>
+        <ul class="text-secondary mb-0">
+          <li><code class="app-code">IT_EXPENSE_REQUESTS</code></li>
+          <li><code class="app-code">IT_EXPENSE_AUDIT_LOG</code></li>
+          <li><code class="app-code">IT_EXPENSE_SESSION</code></li>
+        </ul>
+      </div>
+    </div>
   </article>
 </section>
+
+<app-request-remarks-modal
+  [action]="pendingRemarks()?.action ?? null"
+  [request]="pendingRemarks()?.request ?? null"
+  (confirmed)="confirmRemarks($event)"
+  (dismissed)="cancelRemarks()"
+/>

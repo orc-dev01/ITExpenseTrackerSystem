@@ -1,47 +1,13 @@
-﻿.report-toolbar {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: flex-start;
-  margin-bottom: 16px;
-}
-
 .toolbar-actions {
   display: flex;
-  gap: 10px;
-  align-items: end;
   flex-wrap: wrap;
+  align-items: end;
   justify-content: flex-end;
+  gap: 0.625rem;
 }
 
-label {
-  display: grid;
-  gap: 6px;
-  color: #344054;
-  font-weight: 700;
-  font-size: 13px;
-}
-
-select {
-  min-height: 38px;
-  min-width: 170px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 7px 10px;
-  background: #ffffff;
-}
-
-.toggle-option {
-  display: flex;
-  align-items: center;
-  min-height: 38px;
-  gap: 8px;
-  padding: 0 2px;
-  white-space: nowrap;
-}
-
-.toggle-option input {
-  width: auto;
+.toolbar-actions .form-select {
+  min-width: 10rem;
 }
 
 .column-picker {
@@ -49,150 +15,64 @@ select {
 }
 
 .column-picker summary {
-  display: inline-flex;
-  align-items: center;
-  min-height: 38px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  background: var(--surface-muted);
-  color: var(--text);
-  font-weight: 800;
-  cursor: pointer;
+  list-style: none;
+}
+
+.column-picker summary::-webkit-details-marker {
+  display: none;
 }
 
 .column-panel {
   position: absolute;
   right: 0;
   z-index: 10;
-  display: grid;
-  gap: 8px;
-  min-width: 220px;
-  margin-top: 8px;
-  padding: 12px;
-  background: #ffffff;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: 0 12px 30px rgb(16 24 40 / 12%);
-}
-
-.column-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-}
-
-.column-option input {
-  width: auto;
-}
-
-.primary-button,
-.secondary-button {
-  min-height: 38px;
-  padding: 8px 12px;
-  font-weight: 800;
-}
-
-.primary-button {
-  background: var(--primary);
-  color: #ffffff;
-}
-
-.secondary-button {
-  background: var(--surface-muted);
-  color: var(--text);
-}
-
-.print-sheet {
-  background: #ffffff;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 22px;
+  min-width: 14rem;
+  margin-top: 0.5rem;
 }
 
 .print-header {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
-  border-bottom: 2px solid #17202a;
-  padding-bottom: 14px;
-  margin-bottom: 16px;
+  gap: 1rem;
+  padding-bottom: 0.875rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--app-text);
 }
 
 .print-header h2 {
-  margin: 0 0 4px;
-  font-size: 22px;
+  margin: 0 0 0.25rem;
+  font-size: 1.375rem;
 }
 
 .print-header p,
 .print-meta span,
-.summary-grid span {
-  color: var(--muted);
+.summary-card span {
+  color: var(--app-muted);
 }
 
 .print-meta {
   display: grid;
-  gap: 4px;
+  gap: 0.25rem;
   text-align: right;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
-.summary-grid {
+.summary-card {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: 0.375rem;
 }
 
-.summary-grid article {
-  display: grid;
-  gap: 6px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 12px;
-}
-
-.summary-grid strong {
-  font-size: 20px;
-}
-
-.table-wrap {
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  min-width: 860px;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--line);
-  text-align: left;
-  vertical-align: top;
-}
-
-th {
-  background: var(--surface-muted);
-  color: #344054;
-  font-size: 12px;
-  text-transform: uppercase;
+.summary-card strong {
+  font-size: 1.25rem;
 }
 
 @media (max-width: 860px) {
-  .report-toolbar,
-  .print-header {
-    display: grid;
-  }
-
   .toolbar-actions {
     justify-content: start;
   }
 
-  .summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .print-header {
+    display: grid;
   }
 
   .print-meta {
@@ -211,19 +91,19 @@ th {
     display: none !important;
   }
 
-  .print-sheet {
+  .print-sheet,
+  .print-sheet .card-body {
     border: 0;
     padding: 0;
   }
 
-  table {
+  .app-table {
     min-width: 0;
-    font-size: 11px;
+    font-size: 0.6875rem;
   }
 
   th,
   td {
-    padding: 6px 8px;
+    padding: 0.375rem 0.5rem;
   }
 }
-

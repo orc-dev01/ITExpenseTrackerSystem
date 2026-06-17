@@ -1,0 +1,12 @@
+.modal {
+  background: rgb(23 32 42 / 20%);
+}
+
+.modal-content {
+  border-color: var(--app-border);
+  border-radius: var(--app-radius);
+}
+
+textarea {
+  resize: vertical;
+}

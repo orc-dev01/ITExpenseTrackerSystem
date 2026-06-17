@@ -1,0 +1,34 @@
+.detail-grid span {
+  display: block;
+  color: var(--app-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.detail-grid strong {
+  display: block;
+  margin-top: 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+.timeline {
+  display: grid;
+  gap: 1rem;
+  padding-left: 1.25rem;
+}
+
+.timeline li::marker {
+  color: var(--app-primary);
+  font-weight: 700;
+}
+
+.empty-state {
+  display: grid;
+  place-items: center;
+  min-height: 10rem;
+  padding: 1.5rem;
+  text-align: center;
+  border: 1px dashed var(--app-border);
+  border-radius: var(--app-radius);
+  background: var(--app-surface-muted);
+}

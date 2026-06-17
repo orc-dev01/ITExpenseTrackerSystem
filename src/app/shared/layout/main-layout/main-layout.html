@@ -1,31 +1,30 @@
-﻿<div class="shell">
-  <aside class="sidebar" aria-label="Main navigation">
-    <div class="brand">
+<div class="app-shell">
+  <aside class="app-sidebar" aria-label="Main navigation">
+    <div class="d-flex align-items-center gap-2 px-2 pb-3 border-bottom border-secondary-subtle">
       <span class="brand-mark">IT</span>
-      <span><strong>IT Expense</strong><small>EPMS</small></span>
+      <span><strong class="d-block">IT Expense</strong><small class="text-white-50">EPMS</small></span>
     </div>
 
-    <nav class="nav-list">
+    <nav class="nav nav-pills flex-column gap-1 mt-3">
       @for (item of navItems(); track item.path) {
-        <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.exact ?? false }">
+        <a class="nav-link app-nav-link" [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.exact ?? false }">
           <span>{{ item.label }}</span>
         </a>
       }
     </nav>
   </aside>
 
-  <section class="workspace">
-    <header class="topbar">
+  <section class="min-width-0">
+    <header class="topbar navbar bg-white border-bottom px-3 px-lg-4">
       <div>
-        <strong>{{ user()?.fullName ?? 'User' }}</strong>
-        <span>{{ user()?.email ?? 'Backend session pending' }}</span>
+        <strong class="d-block">{{ user()?.fullName ?? 'User' }}</strong>
+        <span class="small text-secondary">{{ user()?.email ?? 'Backend session pending' }}</span>
       </div>
-      <button type="button" (click)="logout()">Logout</button>
+      <button class="btn btn-outline-secondary btn-sm" type="button" (click)="logout()">Logout</button>
     </header>
 
-    <main class="content">
+    <main class="content container-fluid">
       <router-outlet />
     </main>
   </section>
 </div>
-

@@ -1,0 +1,191 @@
+@if (request(); as request) {
+  <section class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+    <div>
+      <span class="badge rounded-pill text-bg-primary">{{ request.status }}</span>
+      <h1 class="page-title">{{ request.requestNumber }}</h1>
+      <p class="page-subtitle">{{ request.title }}</p>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 justify-content-end">
+      <a class="btn btn-outline-secondary" routerLink="/requests">Back to Requests</a>
+      @for (action of actions(); track action) {
+        <button class="btn btn-primary text-capitalize" type="button" (click)="runAction(action, request)">{{ action }}</button>
+      }
+    </div>
+  </section>
+
+  <section class="row g-3">
+    <article class="col-12 col-xl-8">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex flex-wrap justify-content-between gap-3 mb-3">
+            <div>
+              <h2 class="h5 mb-1">{{ request.title }}</h2>
+              <p class="text-secondary mb-0">{{ request.justification }}</p>
+            </div>
+            @if (request.urgent) {
+              <span class="badge rounded-pill text-bg-danger align-self-start">Urgent</span>
+            }
+          </div>
+
+          <div class="row g-3 detail-grid">
+            <div class="col-12 col-md-6 col-lg-4">
+              <span>Requester</span>
+              <strong>{{ request.requesterName }}</strong>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              <span>Department</span>
+              <strong>{{ request.department }}</strong>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              <span>Cost Center</span>
+              <strong>{{ request.costCenter }}</strong>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              <span>Type</span>
+              <strong>{{ request.requestType }}</strong>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              <span>Total Amount</span>
+              <strong>{{ formatCurrency(request.totalAmount) }}</strong>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              <span>Project</span>
+              <strong>{{ request.project || 'None' }}</strong>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              <span>Created</span>
+              <strong>{{ formatDate(request.createdAt) }}</strong>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              <span>Submitted</span>
+              <strong>{{ formatDate(request.submittedAt) }}</strong>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              <span>Updated</span>
+              <strong>{{ formatDate(request.updatedAt) }}</strong>
+            </div>
+          </div>
+
+          @if (request.remarks) {
+            <div class="alert alert-warning mt-3 mb-0">
+              <strong>Latest remarks:</strong> {{ request.remarks }}
+            </div>
+          }
+        </div>
+      </div>
+    </article>
+
+    <aside class="col-12 col-xl-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6">Available Actions</h2>
+          @if (actions().length) {
+            <div class="d-grid gap-2">
+              @for (action of actions(); track action) {
+                <button class="btn btn-outline-primary text-capitalize" type="button" (click)="runAction(action, request)">{{ action }}</button>
+              }
+            </div>
+          } @else {
+            <p class="text-secondary mb-0">No actions are available for your current role and this request status.</p>
+          }
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="card mt-3">
+    <div class="card-body">
+      <h2 class="h5 mb-3">Line Items</h2>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle app-table mb-0">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Vendor</th>
+              <th>Qty</th>
+              <th>Unit Amount</th>
+              <th>Line Total</th>
+              <th>Seller Link</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of request.lineItems; track item.id) {
+              <tr>
+                <td>{{ item.category }}</td>
+                <td>{{ item.description }}</td>
+                <td>{{ item.vendor }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ formatCurrency(item.unitAmount) }}</td>
+                <td>{{ formatCurrency(item.lineTotal) }}</td>
+                <td>
+                  @if (item.sellerLink) {
+                    <a [href]="item.sellerLink" target="_blank" rel="noreferrer">Open link</a>
+                  } @else {
+                    <span class="text-secondary">None</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="row g-3 mt-1">
+    <article class="col-12 col-xl-7">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h5 mb-3">Workflow History</h2>
+          @if (auditLogs().length) {
+            <ol class="timeline mb-0">
+              @for (log of auditLogs(); track log.id) {
+                <li>
+                  <div class="d-flex flex-wrap justify-content-between gap-2">
+                    <strong>{{ log.action }}</strong>
+                    <span class="text-secondary small">{{ formatDate(log.createdAt) }}</span>
+                  </div>
+                  <p class="mb-1">{{ log.actorName }} <span class="text-secondary">({{ log.actorRole }})</span></p>
+                  @if (log.remarks) {
+                    <p class="text-secondary mb-0">{{ log.remarks }}</p>
+                  }
+                </li>
+              }
+            </ol>
+          } @else {
+            <p class="text-secondary mb-0">No workflow history has been recorded yet.</p>
+          }
+        </div>
+      </div>
+    </article>
+
+    <article class="col-12 col-xl-5">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h5 mb-3">Attachments</h2>
+          <div class="empty-state">
+            <strong>No attachments yet</strong>
+            <p class="text-secondary mb-0">File upload and download will be connected when backend storage is added.</p>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+} @else {
+  <section class="card">
+    <div class="card-body text-center py-5">
+      <h1 class="h4">Request not found</h1>
+      <p class="text-secondary">The request may have been reset or is not visible in the local mock data.</p>
+      <button class="btn btn-primary" type="button" (click)="goBack()">Back to Requests</button>
+    </div>
+  </section>
+}
+
+<app-request-remarks-modal
+  [action]="pendingRemarks()?.action ?? null"
+  [request]="pendingRemarks()?.request ?? null"
+  (confirmed)="confirmRemarks($event)"
+  (dismissed)="cancelRemarks()"
+/>

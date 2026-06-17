@@ -1,45 +1,124 @@
-﻿<section class="page-head">
+<section class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
   <div>
-    <span class="badge">Requester</span>
-    <h1 class="page-title">New Expense Request</h1>
-    <p class="page-subtitle">Creates a localStorage request that can move through endorsement, approval, and Finance processing.</p>
+    <span class="badge rounded-pill text-bg-primary">Requester</span>
+    <h1 class="page-title">{{ isEditMode ? 'Edit Draft Request' : 'New Expense Request' }}</h1>
+    <p class="page-subtitle">{{ isEditMode ? 'Update your saved draft before submitting it to workflow.' : 'Creates a localStorage request that can move through endorsement, approval, and Finance processing.' }}</p>
   </div>
-  <a routerLink="/requests">Back to Requests</a>
+  <a class="btn btn-outline-secondary" routerLink="/requests">Back to Requests</a>
 </section>
 
-<form class="grid form-grid" [formGroup]="form">
-  <section class="card form-section">
-    <h2>Request Header</h2>
-    <label>Title<input formControlName="title" /></label>
-    <label>Justification<textarea formControlName="justification" rows="4"></textarea></label>
-    <div class="two-col">
-      <label>Department<select formControlName="department"><option>IT Operations</option><option>Cybersecurity</option><option>Infrastructure</option></select></label>
-      <label>Cost Center<select formControlName="costCenter"><option>CC-IT-001</option><option>CC-IT-002</option><option>CC-IT-003</option></select></label>
+<form class="row g-3" [formGroup]="form">
+  <section class="col-12 col-xl-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h6 mb-3">Request Header</h2>
+
+        <div class="mb-3">
+          <label class="form-label" for="title">Title</label>
+          <input id="title" class="form-control" formControlName="title" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="justification">Justification</label>
+          <textarea id="justification" class="form-control" formControlName="justification" rows="4"></textarea>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="department">Department</label>
+            <select id="department" class="form-select" formControlName="department">
+              <option>IT Operations</option>
+              <option>Cybersecurity</option>
+              <option>Infrastructure</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="costCenter">Cost Center</label>
+            <select id="costCenter" class="form-select" formControlName="costCenter">
+              <option>CC-IT-001</option>
+              <option>CC-IT-002</option>
+              <option>CC-IT-003</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="project">Project</label>
+            <input id="project" class="form-control" formControlName="project" placeholder="Optional" />
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="requestType">Type</label>
+            <select id="requestType" class="form-select" formControlName="requestType">
+              <option>Expense</option>
+              <option>Purchase</option>
+              <option>Reimbursement</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-check mt-3">
+          <input id="urgent" class="form-check-input" type="checkbox" formControlName="urgent" />
+          <label class="form-check-label" for="urgent">Mark as urgent</label>
+        </div>
+      </div>
     </div>
-    <div class="two-col">
-      <label>Project<input formControlName="project" placeholder="Optional" /></label>
-      <label>Type<select formControlName="requestType"><option>Expense</option><option>Purchase</option><option>Reimbursement</option></select></label>
-    </div>
-    <label class="check"><input type="checkbox" formControlName="urgent" /> Mark as urgent</label>
   </section>
 
-  <section class="card form-section">
-    <h2>Line Item</h2>
-    <div class="two-col">
-      <label>Category<select formControlName="category"><option>Hardware</option><option>Software</option><option>Cloud Services</option></select></label>
-      <label>Vendor<input formControlName="vendor" /></label>
+  <section class="col-12 col-xl-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <h2 class="h6 mb-0">Line Items</h2>
+          <button type="button" class="btn btn-sm btn-outline-primary" (click)="addLineItem()">Add Line Item</button>
+        </div>
+
+        <div class="d-grid gap-3" formArrayName="lineItems">
+          @for (itemGroup of lineItems.controls; track itemGroup; let index = $index) {
+            <div class="line-item-panel" [formGroupName]="index">
+              <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+                <h3 class="h6 mb-0">Item {{ index + 1 }}</h3>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeLineItem(index)" [disabled]="lineItems.length === 1">Remove</button>
+              </div>
+
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label class="form-label" [for]="'category-' + index">Category</label>
+                  <select [id]="'category-' + index" class="form-select" formControlName="category">
+                    <option>Hardware</option>
+                    <option>Software</option>
+                    <option>Cloud Services</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" [for]="'vendor-' + index">Vendor</label>
+                  <input [id]="'vendor-' + index" class="form-control" formControlName="vendor" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label" [for]="'description-' + index">Description</label>
+                  <input [id]="'description-' + index" class="form-control" formControlName="description" />
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" [for]="'quantity-' + index">Quantity</label>
+                  <input [id]="'quantity-' + index" class="form-control" type="number" formControlName="quantity" min="1" />
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" [for]="'unitAmount-' + index">Unit Amount</label>
+                  <input [id]="'unitAmount-' + index" class="form-control" type="number" formControlName="unitAmount" min="1" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label" [for]="'sellerLink-' + index">Seller Link</label>
+                  <input [id]="'sellerLink-' + index" class="form-control" formControlName="sellerLink" placeholder="https://..." />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="alert alert-secondary fw-bold mt-3 mb-0">Grand Total: PHP {{ total.toLocaleString() }}</div>
+      </div>
     </div>
-    <label>Description<input formControlName="description" /></label>
-    <div class="two-col">
-      <label>Quantity<input type="number" formControlName="quantity" min="1" /></label>
-      <label>Unit Amount<input type="number" formControlName="unitAmount" min="1" /></label>
-    </div>
-    <label>Seller Link<input formControlName="sellerLink" placeholder="https://..." /></label>
-    <div class="total-box">Total: PHP {{ total.toLocaleString() }}</div>
   </section>
 
-  <section class="actions">
-    <button type="button" class="secondary-button" (click)="saveDraft()">Save Draft</button>
-    <button type="button" class="primary-button" (click)="submit()">Submit Request</button>
+  <section class="col-12 d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-outline-secondary" (click)="saveDraft()">{{ isEditMode ? 'Save Changes' : 'Save Draft' }}</button>
+    <button type="button" class="btn btn-primary" (click)="submit()">Submit Request</button>
   </section>
 </form>

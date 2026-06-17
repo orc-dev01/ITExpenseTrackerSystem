@@ -1,15 +1,24 @@
-﻿.login-screen { display: grid; place-items: center; min-height: 100vh; padding: 24px; }
-.login-card { display: grid; gap: 16px; width: min(760px, 100%); padding: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
-h1 { margin: 8px 0 4px; }
-p { margin: 0; color: var(--muted); }
-.account-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.account-button { display: grid; gap: 4px; min-height: 96px; padding: 12px; background: var(--surface-muted); color: var(--text); text-align: left; border: 1px solid transparent; }
-.account-button:hover { border-color: var(--primary); background: #ffffff; }
-.account-button span, .account-button small { color: var(--muted); overflow-wrap: anywhere; }
-.account-button small { font-size: 11px; }
-label { display: grid; gap: 6px; font-weight: 600; }
-input { min-height: 42px; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
-.submit-button { min-height: 42px; background: var(--primary); color: white; font-weight: 700; }
-.submit-button:disabled { opacity: 0.65; cursor: default; }
-.error { color: var(--danger); }
-@media (max-width: 760px) { .account-grid { grid-template-columns: 1fr; } }
+.login-screen {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 1.5rem;
+}
+
+.login-card {
+  width: min(820px, 100%);
+  border-color: var(--app-border);
+}
+
+h1 {
+  margin: 0.5rem 0 0.25rem;
+}
+
+.account-button {
+  min-height: 6rem;
+}
+
+.account-button:hover {
+  border-color: var(--app-primary) !important;
+  background: #ffffff;
+}

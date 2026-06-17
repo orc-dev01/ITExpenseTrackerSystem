@@ -1,6 +1,7 @@
 ﻿import { Routes } from '@angular/router';
 import { ApiEndpoints } from '@core/api/api-endpoints';
 import { FeaturePage } from '@shared/pages/feature-page/feature-page';
+import { AuditTrailPage } from './audit-trail/audit-trail-page';
 
 export const WORKFLOW_ROUTES: Routes = [
   {
@@ -31,14 +32,9 @@ export const WORKFLOW_ROUTES: Routes = [
   },
   {
     path: 'audit',
-    component: FeaturePage,
+    component: AuditTrailPage,
     data: {
-      title: 'Workflow Audit Trail',
-      subtitle: 'Append-only action history for every request lifecycle transition.',
-      mockKey: 'audit',
-      roles: ['Approver', 'FinanceViewer', 'Admin'],
-      capabilities: ['Every status transition records actor, role, action, remarks, IP, and timestamp.', 'File upload events are also logged.', 'Requesters see own request history.', 'Approvers and Finance can review full audit trail.'],
-      endpoints: [ApiEndpoints.workflow.auditTrail(':requestId')]
+      roles: ['Approver', 'FinanceViewer', 'Admin']
     }
   },
   { path: '', pathMatch: 'full', redirectTo: 'endorsements' }

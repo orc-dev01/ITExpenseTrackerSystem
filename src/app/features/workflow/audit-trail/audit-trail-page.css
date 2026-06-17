@@ -1,0 +1,43 @@
+.metric-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow-sm);
+}
+
+.metric-label {
+  color: var(--app-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.metric-value {
+  color: var(--app-text);
+  font-size: 1.9rem;
+  line-height: 1.1;
+}
+
+.metric-value-sm {
+  font-size: 1.2rem;
+}
+
+.action-pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  color: var(--app-primary-strong);
+  background: rgb(var(--app-primary-rgb) / 10%);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.remarks-cell {
+  min-width: 14rem;
+  color: var(--app-muted);
+}

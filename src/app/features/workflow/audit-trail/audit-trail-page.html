@@ -1,0 +1,94 @@
+<section class="d-grid gap-4">
+  <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+    <div>
+      <span class="section-eyebrow">Workflow</span>
+      <h1 class="page-title mb-2">Audit Trail</h1>
+      <p class="text-secondary mb-0">Review every request action with actor, role, date, time, and remarks.</p>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="metric-card h-100">
+        <span class="metric-label">Total Logs</span>
+        <strong class="metric-value">{{ totalLogs() }}</strong>
+        <span class="text-secondary small">All request lifecycle actions</span>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="metric-card h-100">
+        <span class="metric-label">Returned / Rejected</span>
+        <strong class="metric-value">{{ returnedRejectedCount() }}</strong>
+        <span class="text-secondary small">Actions that include decision remarks</span>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="metric-card h-100">
+        <span class="metric-label">Latest Action</span>
+        <strong class="metric-value metric-value-sm">{{ latestAction() }}</strong>
+        <span class="text-secondary small">{{ latestActionDate() }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card app-card">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-lg-8">
+          <label class="form-label fw-semibold" for="auditSearch">Search audit logs</label>
+          <input
+            id="auditSearch"
+            class="form-control"
+            type="search"
+            [ngModel]="searchTerm()"
+            (ngModelChange)="setSearch($event)"
+            placeholder="Search by request number, actor, role, action, or remarks"
+          />
+        </div>
+        <div class="col-lg-4">
+          <label class="form-label fw-semibold" for="auditAction">Action</label>
+          <select id="auditAction" class="form-select" [ngModel]="actionFilter()" (ngModelChange)="setAction($event)">
+            @for (option of actionOptions; track option) {
+              <option [value]="option">{{ option }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card app-card">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Date / Time</th>
+            <th>Request</th>
+            <th>Actor</th>
+            <th>Role</th>
+            <th>Action</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of logs(); track log.id) {
+            <tr>
+              <td class="text-nowrap">{{ formatDate(log.createdAt) }}</td>
+              <td>
+                <a class="fw-semibold text-decoration-none" [routerLink]="['/requests', log.requestId]">{{ log.requestNumber }}</a>
+              </td>
+              <td>{{ log.actorName }}</td>
+              <td>{{ log.actorRole }}</td>
+              <td><span class="action-pill">{{ log.action }}</span></td>
+              <td class="remarks-cell">{{ log.remarks || 'No remarks provided.' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="text-center text-secondary py-5">No audit logs found.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

@@ -1,35 +1,37 @@
-﻿<main class="login-screen">
-  <form class="login-card" [formGroup]="form" (ngSubmit)="submit()">
-    <div>
-      <span class="badge">IT-EPMS</span>
+<main class="login-screen container-fluid">
+  <form class="login-card card shadow-sm" [formGroup]="form" (ngSubmit)="submit()">
+    <div class="card-body p-4 p-lg-5">
+      <span class="badge rounded-pill text-bg-primary">IT-EPMS</span>
       <h1>IT Expense</h1>
-      <p>Choose a mock account to test role-based routes and request workflow.</p>
-    </div>
+      <p class="text-secondary mb-4">Choose an account to test role-based routes and request workflow.</p>
 
-    <section class="account-grid" aria-label="Mock accounts">
-      @for (account of accounts; track account.user.email) {
-        <button class="account-button" type="button" (click)="useAccount(account)">
-          <strong>{{ account.label }}</strong>
-          <span>{{ account.user.email }}</span>
-          <small>{{ account.user.roles.join(', ') }}</small>
-        </button>
+      <section class="row g-2 mb-3" aria-label="Mock accounts">
+        @for (account of accounts; track account.user.email) {
+          <div class="col-12 col-md-6 col-lg-4">
+            <button class="account-button btn btn-light border w-100 h-100 text-start" type="button" (click)="useAccount(account)">
+              <strong class="d-block">{{ account.label }}</strong>
+              <span class="d-block text-secondary small text-break">{{ account.user.email }}</span>
+              <small class="d-block text-secondary">{{ account.user.roles.join(', ') }}</small>
+            </button>
+          </div>
+        }
+      </section>
+
+      <div class="mb-3">
+        <label class="form-label" for="email">Email</label>
+        <input id="email" class="form-control" type="email" formControlName="email" autocomplete="email" />
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="password">Password</label>
+        <input id="password" class="form-control" type="password" formControlName="password" autocomplete="current-password" />
+      </div>
+
+      @if (errorMessage) {
+        <div class="alert alert-danger py-2">{{ errorMessage }}</div>
       }
-    </section>
 
-    <label>
-      Email
-      <input type="email" formControlName="email" autocomplete="email" />
-    </label>
-
-    <label>
-      Password
-      <input type="password" formControlName="password" autocomplete="current-password" />
-    </label>
-
-    @if (errorMessage) {
-      <p class="error">{{ errorMessage }}</p>
-    }
-
-    <button class="submit-button" type="submit" [disabled]="loading">{{ loading ? 'Signing in...' : 'Sign in' }}</button>
+      <button class="btn btn-primary w-100" type="submit" [disabled]="loading">{{ loading ? 'Signing in...' : 'Sign in' }}</button>
+    </div>
   </form>
 </main>
