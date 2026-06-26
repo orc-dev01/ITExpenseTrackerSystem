@@ -20,10 +20,12 @@
   workflow: {
     endorsements: '/workflow/endorsements',
     approvals: '/workflow/approvals',
+    auditTrailAll: '/workflow/audit-trail',
     endorse: (id: string | number) => `/workflow/requests/${id}/endorse`,
     approve: (id: string | number) => `/workflow/requests/${id}/approve`,
     return: (id: string | number) => `/workflow/requests/${id}/return`,
     reject: (id: string | number) => `/workflow/requests/${id}/reject`,
+    close: (id: string | number) => `/workflow/requests/${id}/close`,
     auditTrail: (id: string | number) => `/workflow/requests/${id}/audit-trail`
   },
   admin: {
@@ -36,6 +38,7 @@
     coaAccounts: '/admin/coa-accounts'
   },
   reports: {
+    requestDashboard: '/reports/request-dashboard',
     spendDashboard: '/reports/spend-dashboard',
     expenseSummary: '/reports/expense-summary',
     exportApprovedCsv: '/reports/approved-requests.csv',
@@ -65,6 +68,7 @@
   notifications: {
     list: '/notifications',
     unreadCount: '/notifications/unread-count',
+    markAllRead: '/notifications/read-all',
     markRead: (id: string | number) => `/notifications/${id}/read`
   },
   files: {

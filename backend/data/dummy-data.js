@@ -153,6 +153,7 @@ const requests = [
     costCenterId: 'cc-it-001',
     requestType: 'Expense',
     status: 'Approved',
+    disbursementStatus: 'Pending',
     urgent: false,
     totalAmount: 42000,
     createdAt: now,
@@ -199,6 +200,9 @@ const auditLogs = [
   }
 ];
 
+const attachments = [];
+const notifications = [];
+
 module.exports = {
   users,
   departments,
@@ -206,5 +210,7 @@ module.exports = {
   categories,
   projects,
   requests,
-  auditLogs
+  auditLogs,
+  attachments,
+  notifications
 };

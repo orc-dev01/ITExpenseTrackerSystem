@@ -1,0 +1,93 @@
+<section class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+  <div>
+    <span class="badge rounded-pill text-bg-primary">Phase 1</span>
+    <h1 class="page-title">Notifications</h1>
+    <p class="page-subtitle">Backend notifications for submitted, returned, and approved requests.</p>
+  </div>
+
+  <div class="d-flex flex-wrap gap-2">
+    <button class="btn btn-outline-secondary" type="button" [disabled]="loading()" (click)="loadNotifications()">
+      {{ loading() ? 'Refreshing...' : 'Refresh' }}
+    </button>
+    <button class="btn btn-primary" type="button" [disabled]="unreadCount() === 0" (click)="markAllRead()">
+      Mark All Read
+    </button>
+  </div>
+</section>
+
+@if (loading()) {
+  <div class="alert alert-info py-2" role="status">
+    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+    Loading notifications from backend...
+  </div>
+}
+
+@if (errorMessage()) {
+  <div class="alert alert-danger py-2" role="alert">{{ errorMessage() }}</div>
+}
+
+<section class="row g-3 mb-3">
+  <div class="col-12 col-md-4">
+    <article class="summary-card card h-100">
+      <div class="card-body">
+        <span>Unread</span>
+        <strong>{{ unreadCount() }}</strong>
+      </div>
+    </article>
+  </div>
+  <div class="col-12 col-md-4">
+    <article class="summary-card card h-100">
+      <div class="card-body">
+        <span>Total</span>
+        <strong>{{ notifications().length }}</strong>
+      </div>
+    </article>
+  </div>
+  <div class="col-12 col-md-4">
+    <article class="summary-card card h-100">
+      <div class="card-body">
+        <span>Latest</span>
+        <strong>{{ notifications()[0] ? typeLabel(notifications()[0].type) : 'None' }}</strong>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-body">
+    <h2 class="h6 mb-3">Notification List</h2>
+
+    @if (notifications().length) {
+      <div class="list-group list-group-flush">
+        @for (notification of notifications(); track notification.id) {
+          <article class="list-group-item px-0 notification-item" [class.unread]="notification.unread">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+              <div>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                  <span class="badge rounded-pill" [class.text-bg-primary]="notification.unread" [class.text-bg-light]="!notification.unread">
+                    {{ typeLabel(notification.type) }}
+                  </span>
+                  @if (notification.unread) {
+                    <span class="badge rounded-pill text-bg-warning">Unread</span>
+                  }
+                </div>
+                <h3 class="h6 mb-1">{{ notification.subject }}</h3>
+                <p class="text-secondary mb-1">{{ notification.message }}</p>
+                <span class="text-secondary small">{{ formatDate(notification.createdAt) }}</span>
+              </div>
+
+              <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-sm btn-outline-primary" [routerLink]="['/requests', notification.requestId]" (click)="markRead(notification)">View Request</a>
+                <button class="btn btn-sm btn-outline-secondary" type="button" [disabled]="!notification.unread" (click)="markRead(notification)">
+                  Mark Read
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    } @else {
+      <p class="text-secondary mb-0">No notifications yet. New submitted, returned, and approved requests will appear here.</p>
+    }
+  </div>
+</section>

@@ -6,8 +6,10 @@ import { RequestStoreService } from '@features/requests/request-store.service';
 type AuditActionFilter =
   | 'All'
   | 'Submitted'
+  | 'Resubmitted'
   | 'Saved Draft'
   | 'Updated Draft'
+  | 'Updated Returned Request'
   | 'Endorsed'
   | 'Approved'
   | 'Returned'
@@ -22,11 +24,11 @@ type AuditActionFilter =
   styleUrl: './audit-trail-page.css'
 })
 export class AuditTrailPage {
-  private readonly store = inject(RequestStoreService);
+  readonly store = inject(RequestStoreService);
 
   readonly searchTerm = signal('');
   readonly actionFilter = signal<AuditActionFilter>('All');
-  readonly actionOptions: AuditActionFilter[] = ['All', 'Submitted', 'Saved Draft', 'Updated Draft', 'Endorsed', 'Approved', 'Returned', 'Rejected', 'Cancelled', 'Closed'];
+  readonly actionOptions: AuditActionFilter[] = ['All', 'Submitted', 'Resubmitted', 'Saved Draft', 'Updated Draft', 'Updated Returned Request', 'Endorsed', 'Approved', 'Returned', 'Rejected', 'Cancelled', 'Closed'];
 
   readonly logs = computed(() => {
     const search = this.searchTerm().trim().toLowerCase();

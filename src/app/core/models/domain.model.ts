@@ -15,7 +15,7 @@ export type ExpenseRequestStatus =
 
 export type RequestType = 'Expense' | 'Purchase' | 'Reimbursement';
 export type LinkType = 'Lazada' | 'Shopee' | 'Ebay' | 'Amazon' | 'Other';
-export type DisbursementStatus = 'Pending' | 'InProcess' | 'Completed' | 'OnHold';
+export type DisbursementStatus = 'Pending' | 'InProcess' | 'Processed' | 'OnHold';
 
 export interface ExpenseRequest {
   id: string;

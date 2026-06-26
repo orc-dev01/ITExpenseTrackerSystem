@@ -1,0 +1,124 @@
+<section class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+  <div>
+    <span class="badge rounded-pill text-bg-primary">Phase 1</span>
+    <h1 class="page-title">Request Dashboard</h1>
+    <p class="page-subtitle">Backend-powered request counts based on your current role and visible requests.</p>
+  </div>
+
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-secondary" routerLink="/requests">View Requests</a>
+    <button class="btn btn-primary" type="button" [disabled]="loading()" (click)="loadSummary()">
+      {{ loading() ? 'Refreshing...' : 'Refresh' }}
+    </button>
+  </div>
+</section>
+
+@if (loading()) {
+  <div class="alert alert-info py-2" role="status">
+    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+    Loading dashboard counts from backend...
+  </div>
+}
+
+@if (errorMessage()) {
+  <div class="alert alert-danger py-2" role="alert">{{ errorMessage() }}</div>
+}
+
+@if (summary(); as summary) {
+  <section class="row g-3 mb-3" aria-label="Request dashboard counts">
+    <div class="col-12 col-sm-6 col-xl-3">
+      <article class="metric-card card h-100">
+        <div class="card-body">
+          <span>Total Visible</span>
+          <strong>{{ summary.total }}</strong>
+        </div>
+      </article>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+      <article class="metric-card card h-100 tone-warning">
+        <div class="card-body">
+          <span>Pending Action</span>
+          <strong>{{ summary.pendingAction }}</strong>
+        </div>
+      </article>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+      <article class="metric-card card h-100 tone-danger">
+        <div class="card-body">
+          <span>Urgent</span>
+          <strong>{{ summary.urgent }}</strong>
+        </div>
+      </article>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+      <article class="metric-card card h-100 tone-success">
+        <div class="card-body">
+          <span>Total Amount</span>
+          <strong>{{ formatCurrency(summary.totalAmount) }}</strong>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="row g-3">
+    <article class="col-12 col-xl-5">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 mb-3">Status Counts</h2>
+          <div class="list-group list-group-flush">
+            @for (status of statusOrder; track status) {
+              <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                <span>{{ status }}</span>
+                <strong>{{ summary.countsByStatus[status] ?? 0 }}</strong>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="col-12 col-xl-7">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 mb-3">Recent Visible Requests</h2>
+          @if (summary.recentRequests.length) {
+            <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle app-table mb-0">
+                <thead>
+                  <tr>
+                    <th>Request No</th>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th>Updated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (request of summary.recentRequests; track request.id) {
+                    <tr>
+                      <td><a class="fw-semibold" [routerLink]="['/requests', request.id]">{{ request.requestNumber }}</a></td>
+                      <td>
+                        {{ request.title }}
+                        @if (request.urgent) {
+                          <span class="badge rounded-pill text-bg-danger ms-1">Urgent</span>
+                        }
+                      </td>
+                      <td><span class="badge rounded-pill text-bg-light border">{{ displayStatus(request) }}</span></td>
+                      <td>{{ formatCurrency(request.totalAmount) }}</td>
+                      <td>{{ formatDate(request.updatedAt) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="text-secondary mb-0">No requests are visible for your current role yet.</p>
+          }
+        </div>
+      </div>
+    </article>
+  </section>
+}

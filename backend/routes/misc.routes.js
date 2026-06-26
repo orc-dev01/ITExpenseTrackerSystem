@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const express = require('express');
+const fs = require('fs');
 const store = require('../store/dummy-store');
 const { requireAnyRole, requireAuth } = require('../middleware/auth.middleware');
 
@@ -16,9 +17,18 @@ router.get('/budgets/availability', (_req, res) => res.json({ available: 190000,
 router.get('/budgets/threshold-alerts', (_req, res) => res.json([]));
 
 router.use('/disbursement', requireAuth, requireAnyRole(['FinanceViewer', 'Admin']));
-router.get('/disbursement/accounting', (_req, res) => res.json(store.state.requests.filter((request) => request.status === 'Approved')));
+router.get('/disbursement/accounting', (req, res) => {
+  return res.json(
+    store
+      .listRequestsForUser(req.user)
+      .filter((request) => request.status === 'Approved' && request.requestType === 'Expense')
+  );
+});
 router.get('/disbursement/purchasing', (_req, res) => res.json([]));
-router.patch('/disbursement/:id/status', (req, res) => res.json({ id: req.params.id, status: req.body.status ?? 'InProcess' }));
+router.patch('/disbursement/:id/status', (req, res) => {
+  const result = store.updateDisbursementStatus(req.params.id, req.user, req.body.status);
+  return result.ok ? res.json(result.request) : res.status(result.status).json({ message: result.message });
+});
 
 router.use('/purchase-requests', requireAuth);
 router.get('/purchase-requests', (_req, res) => res.json([]));
@@ -31,12 +41,27 @@ router.post('/reimbursements/submit', (req, res) => res.status(201).json({ id: c
 router.patch('/reimbursements/:id/payment-status', (req, res) => res.json({ id: req.params.id, paymentStatus: req.body.paymentStatus ?? 'Pending' }));
 
 router.use('/notifications', requireAuth);
-router.get('/notifications', (_req, res) => res.json([{ id: 'notif-1', subject: 'New endorsement required', unread: true }]));
-router.get('/notifications/unread-count', (_req, res) => res.json({ count: 1 }));
-router.patch('/notifications/:id/read', (req, res) => res.json({ id: req.params.id, unread: false }));
+router.get('/notifications', (req, res) => res.json(store.listNotificationsForUser(req.user)));
+router.get('/notifications/unread-count', (req, res) => res.json({ count: store.unreadNotificationCount(req.user) }));
+router.patch('/notifications/read-all', (req, res) => res.json(store.markAllNotificationsRead(req.user)));
+router.patch('/notifications/:id/read', (req, res) => {
+  const notification = store.markNotificationRead(req.params.id, req.user);
+  return notification ? res.json(notification) : res.status(404).json({ message: 'Notification not found.' });
+});
 
 router.get('/files/:fileId/download', requireAuth, (req, res) => {
-  return res.json({ message: 'Dummy file endpoint. Real file streaming will be added with storage integration.', fileId: req.params.fileId });
+  const attachment = store.findAttachment(req.params.fileId);
+  const request = attachment ? store.findRequest(attachment.requestId) : null;
+  if (!attachment || !request || !store.userCanReadRequest(req.user, request)) {
+    return res.status(404).json({ message: 'File not found.' });
+  }
+
+  if (!fs.existsSync(attachment.storagePath)) {
+    return res.status(404).json({ message: 'Stored file is missing.' });
+  }
+
+  res.setHeader('Content-Type', attachment.contentType);
+  return res.download(attachment.storagePath, attachment.fileName);
 });
 
 router.get('/jobs/notifications', requireAuth, requireAnyRole(['Admin']), (_req, res) => res.json({ status: 'idle' }));

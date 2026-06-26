@@ -13,17 +13,72 @@
     @if (canCreate()) {
     <a class="btn btn-primary" routerLink="/requests/new">New Request</a>
     }
-    <button type="button" class="btn btn-outline-secondary" (click)="reset()">
+    <button type="button" class="btn btn-outline-secondary" [disabled]="store.isBusy()" (click)="reset()">
       Reset Mock Data
     </button>
   </div>
 </section>
 
-<!-- <section class="card">
-  <div class="card-body">
- 
+@if (store.loadingMessage()) {
+  <div class="alert alert-info py-2" role="status">
+    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+    {{ store.loadingMessage() }}
   </div>
-</section> -->
+}
+
+@if (store.successMessage()) {
+  <div class="alert alert-success py-2" role="status">{{ store.successMessage() }}</div>
+}
+
+@if (store.errorMessage()) {
+  <div class="alert alert-danger py-2" role="alert">{{ store.errorMessage() }}</div>
+}
+
+<section class="request-filters border rounded bg-white p-3 mb-3">
+  <div class="row g-3 align-items-end">
+    <div class="col-12 col-lg-7">
+      <label class="form-label" for="requestSearch">Search requests</label>
+      <input
+        id="requestSearch"
+        class="form-control"
+        type="search"
+        placeholder="Search request no, title, requester, department..."
+        [value]="searchTerm()"
+        (input)="updateSearch($event)"
+      />
+    </div>
+
+    <div class="col-12 col-sm-7 col-lg-3">
+      <label class="form-label" for="statusFilter">Status</label>
+      <select
+        id="statusFilter"
+        class="form-select"
+        [value]="statusFilter()"
+        (change)="updateStatusFilter($event)"
+      >
+        <option value="All">All statuses</option>
+        @for (status of statusOptions; track status) {
+        <option [value]="status">{{ status }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="col-12 col-sm-5 col-lg-2 d-grid">
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        [disabled]="!hasActiveFilters()"
+        (click)="clearFilters()"
+      >
+        Clear
+      </button>
+    </div>
+  </div>
+
+  <div class="small text-secondary mt-2">
+    Showing {{ requests().length }} of {{ store.visibleRequests().length }} visible requests.
+  </div>
+</section>
 
 <section>
   <div class="table-responsive">
@@ -62,7 +117,7 @@
           <td>{{ request.department }}</td>
           <td>
             <span class="badge rounded-pill text-bg-light border"
-              >{{ request.status }}</span
+              >{{ displayStatus(request) }}</span
             >
           </td>
           <td>PHP {{ request.totalAmount.toLocaleString() }}</td>
@@ -74,6 +129,7 @@
               <button
                 class="btn btn-sm btn-outline-primary text-capitalize"
                 type="button"
+                [disabled]="store.isRequestPending(request.id)"
                 (click)="runAction(action, request); $event.stopPropagation()"
               >
                 {{ action }}
@@ -85,7 +141,11 @@
         } @empty {
         <tr>
           <td colspan="8" class="text-secondary">
-            No requests visible for this role yet.
+            @if (hasActiveFilters()) {
+              No requests match your search or status filter.
+            } @else {
+              No requests visible for this role yet.
+            }
           </td>
         </tr>
         }

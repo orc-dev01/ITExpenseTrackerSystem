@@ -1,7 +1,7 @@
-import { Component, inject, signal } from "@angular/core";
+import { Component, computed, inject, signal } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
 import { AuthService } from "@core/auth/auth.service";
-import { UserRole } from "@core/models/domain.model";
+import { ExpenseRequestStatus, UserRole } from "@core/models/domain.model";
 
 import {
   RemarksAction,
@@ -29,15 +29,68 @@ export class RequestListPage {
   readonly store = inject(RequestStoreService);
   readonly user = this.auth.user;
   readonly roles = this.auth.roles;
-  readonly requests = this.store.visibleRequests;
+  readonly searchTerm = signal("");
+  readonly statusFilter = signal<ExpenseRequestStatus | "All">("All");
+  readonly statusOptions: ExpenseRequestStatus[] = [
+    "Draft",
+    "PendingEndorsement",
+    "PendingApproval",
+    "Approved",
+    "Returned",
+    "Rejected",
+    "Closed",
+    "Cancelled",
+  ];
+  readonly requests = computed(() => {
+    const search = this.searchTerm().trim().toLowerCase();
+    const status = this.statusFilter();
+
+    return this.store.visibleRequests().filter((request) => {
+      const matchesStatus = status === "All" || request.status === status;
+      const matchesSearch =
+        !search ||
+        [
+          request.requestNumber,
+          request.title,
+          request.justification,
+          request.requesterName,
+          request.department,
+          request.costCenter,
+          request.project,
+          request.requestType,
+          request.status,
+          String(request.totalAmount),
+        ]
+          .some((value) =>
+            String(value ?? "")
+              .toLowerCase()
+              .includes(search),
+          );
+
+      return matchesStatus && matchesSearch;
+    });
+  });
+  readonly hasActiveFilters = computed(
+    () => this.searchTerm().trim().length > 0 || this.statusFilter() !== "All",
+  );
   readonly pendingRemarks = signal<PendingRemarks | null>(null);
+
+  constructor() {
+    this.store.refreshFromBackend();
+  }
 
   canCreate(): boolean {
     return this.hasRole("Requester") || this.hasRole("Admin");
   }
 
   actionsFor(request: LocalExpenseRequest): string[] {
-    return this.store.canAct(request.status, this.roles());
+    return this.store.canAct(request.status, this.roles(), request.disbursementStatus);
+  }
+
+  displayStatus(request: LocalExpenseRequest): string {
+    return request.status === "Approved" && request.disbursementStatus
+      ? `Approved / ${this.financeStatusLabel(request.disbursementStatus)}`
+      : request.status;
   }
 
   runAction(action: string, request: LocalExpenseRequest): void {
@@ -67,6 +120,21 @@ export class RequestListPage {
     this.store.resetMockData();
   }
 
+  updateSearch(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+  }
+
+  updateStatusFilter(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    this.statusFilter.set(select.value as ExpenseRequestStatus | "All");
+  }
+
+  clearFilters(): void {
+    this.searchTerm.set("");
+    this.statusFilter.set("All");
+  }
+
   openRequest(request: LocalExpenseRequest): void {
     void this.router.navigate(["/requests", request.id]);
   }
@@ -93,5 +161,15 @@ export class RequestListPage {
 
   private hasRole(role: UserRole): boolean {
     return this.roles().includes(role);
+  }
+
+  private financeStatusLabel(status: string): string {
+    const labels: Record<string, string> = {
+      Pending: "Pending Finance",
+      InProcess: "In Process",
+      Processed: "Processed",
+      OnHold: "On Hold",
+    };
+    return labels[status] ?? status;
   }
 }

@@ -1,13 +1,48 @@
 <section class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
   <div>
     <span class="badge rounded-pill text-bg-primary">Requester</span>
-    <h1 class="page-title">{{ isEditMode ? 'Edit Draft Request' : 'New Expense Request' }}</h1>
-    <p class="page-subtitle">{{ isEditMode ? 'Update your saved draft before submitting it to workflow.' : 'Creates a localStorage request that can move through endorsement, approval, and Finance processing.' }}</p>
+    <h1 class="page-title">{{ pageTitle }}</h1>
+    <p class="page-subtitle">{{ pageSubtitle }}</p>
   </div>
   <a class="btn btn-outline-secondary" routerLink="/requests">Back to Requests</a>
 </section>
 
 <form class="row g-3" [formGroup]="form">
+  @if (store.loadingMessage()) {
+    <section class="col-12">
+      <div class="alert alert-info py-2 mb-0" role="status">
+        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+        {{ store.loadingMessage() }}
+      </div>
+    </section>
+  }
+
+  @if (store.successMessage()) {
+    <section class="col-12">
+      <div class="alert alert-success py-2 mb-0" role="status">{{ store.successMessage() }}</div>
+    </section>
+  }
+
+  @if (store.errorMessage()) {
+    <section class="col-12">
+      <div class="alert alert-danger py-2 mb-0" role="alert">{{ store.errorMessage() }}</div>
+    </section>
+  }
+
+  @if (validationMessage()) {
+    <section class="col-12">
+      <div class="alert alert-warning py-2 mb-0" role="alert">{{ validationMessage() }}</div>
+    </section>
+  }
+
+  @if (returnRemarks) {
+    <section class="col-12">
+      <div class="alert alert-warning mb-0">
+        <strong>Return remarks:</strong> {{ returnRemarks }}
+      </div>
+    </section>
+  }
+
   <section class="col-12 col-xl-6">
     <div class="card h-100">
       <div class="card-body">
@@ -15,12 +50,18 @@
 
         <div class="mb-3">
           <label class="form-label" for="title">Title</label>
-          <input id="title" class="form-control" formControlName="title" />
+          <input id="title" class="form-control" formControlName="title" [class.is-invalid]="form.controls.title.touched && form.controls.title.invalid" />
+          @if (form.controls.title.touched && form.controls.title.invalid) {
+            <div class="invalid-feedback d-block">Title is required.</div>
+          }
         </div>
 
         <div class="mb-3">
           <label class="form-label" for="justification">Justification</label>
-          <textarea id="justification" class="form-control" formControlName="justification" rows="4"></textarea>
+          <textarea id="justification" class="form-control" formControlName="justification" rows="4" [class.is-invalid]="form.controls.justification.touched && form.controls.justification.invalid"></textarea>
+          @if (form.controls.justification.touched && form.controls.justification.invalid) {
+            <div class="invalid-feedback d-block">Justification is required.</div>
+          }
         </div>
 
         <div class="row g-3">
@@ -89,19 +130,31 @@
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label" [for]="'vendor-' + index">Vendor</label>
-                  <input [id]="'vendor-' + index" class="form-control" formControlName="vendor" />
+                  <input [id]="'vendor-' + index" class="form-control" formControlName="vendor" [class.is-invalid]="itemGroup.controls.vendor.touched && itemGroup.controls.vendor.invalid" />
+                  @if (itemGroup.controls.vendor.touched && itemGroup.controls.vendor.invalid) {
+                    <div class="invalid-feedback d-block">Vendor is required.</div>
+                  }
                 </div>
                 <div class="col-12">
                   <label class="form-label" [for]="'description-' + index">Description</label>
-                  <input [id]="'description-' + index" class="form-control" formControlName="description" />
+                  <input [id]="'description-' + index" class="form-control" formControlName="description" [class.is-invalid]="itemGroup.controls.description.touched && itemGroup.controls.description.invalid" />
+                  @if (itemGroup.controls.description.touched && itemGroup.controls.description.invalid) {
+                    <div class="invalid-feedback d-block">Description is required.</div>
+                  }
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label" [for]="'quantity-' + index">Quantity</label>
-                  <input [id]="'quantity-' + index" class="form-control" type="number" formControlName="quantity" min="1" />
+                  <input [id]="'quantity-' + index" class="form-control" type="number" formControlName="quantity" min="1" [class.is-invalid]="itemGroup.controls.quantity.touched && itemGroup.controls.quantity.invalid" />
+                  @if (itemGroup.controls.quantity.touched && itemGroup.controls.quantity.invalid) {
+                    <div class="invalid-feedback d-block">Quantity must be at least 1.</div>
+                  }
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label" [for]="'unitAmount-' + index">Unit Amount</label>
-                  <input [id]="'unitAmount-' + index" class="form-control" type="number" formControlName="unitAmount" min="1" />
+                  <input [id]="'unitAmount-' + index" class="form-control" type="number" formControlName="unitAmount" min="1" [class.is-invalid]="itemGroup.controls.unitAmount.touched && itemGroup.controls.unitAmount.invalid" />
+                  @if (itemGroup.controls.unitAmount.touched && itemGroup.controls.unitAmount.invalid) {
+                    <div class="invalid-feedback d-block">Unit amount must be at least 1.</div>
+                  }
                 </div>
                 <div class="col-12">
                   <label class="form-label" [for]="'sellerLink-' + index">Seller Link</label>
@@ -118,7 +171,7 @@
   </section>
 
   <section class="col-12 d-flex justify-content-end gap-2">
-    <button type="button" class="btn btn-outline-secondary" (click)="saveDraft()">{{ isEditMode ? 'Save Changes' : 'Save Draft' }}</button>
-    <button type="button" class="btn btn-primary" (click)="submit()">Submit Request</button>
+    <button type="button" class="btn btn-outline-secondary" [disabled]="store.isBusy()" (click)="saveDraft()">{{ isEditMode ? 'Save Changes' : 'Save Draft' }}</button>
+    <button type="button" class="btn btn-primary" [disabled]="store.isBusy()" (click)="submit()">Submit Request</button>
   </section>
 </form>

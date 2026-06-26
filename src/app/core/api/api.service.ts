@@ -1,4 +1,4 @@
-﻿import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '@environments/environment';
 
@@ -27,6 +27,14 @@ export class ApiService {
 
   delete<T>(endpoint: string, query?: QueryParams) {
     return this.http.delete<T>(this.url(endpoint), { params: this.params(query) });
+  }
+
+  download(endpoint: string, query?: QueryParams) {
+    return this.http.get(this.url(endpoint), {
+      observe: 'response',
+      params: this.params(query),
+      responseType: 'blob'
+    });
   }
 
   private url(endpoint: string): string {

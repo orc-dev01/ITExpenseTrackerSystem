@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "ng serve --host 0.0.0.0 --proxy-config proxy.conf.json",
+    "start:web": "ng serve --host 0.0.0.0 --proxy-config proxy.conf.json",
     "start:api": "node backend/server.js",
     "dev:api": "node --watch backend/server.js",
     "build": "ng build",
+    "check:backend": "node --check backend/server.js && node --check backend/routes/auth.routes.js && node --check backend/routes/requests.routes.js && node --check backend/routes/workflow.routes.js && node --check backend/routes/misc.routes.js && node --check backend/store/dummy-store.js",
     "watch": "ng build --watch --configuration development"
   },
   "dependencies": {

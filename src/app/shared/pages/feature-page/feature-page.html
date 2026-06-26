@@ -1,103 +1,150 @@
 @if (data$ | async; as data) {
   @let mock = moduleData(data['mockKey']);
 
-  <section class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
-    <div class="title-block">
-      <span class="badge rounded-pill text-bg-primary w-fit">{{ data['phase'] ?? 'Phase 1' }}</span>
-      <h1 class="page-title">{{ data['title'] }}</h1>
-      <p class="page-subtitle">{{ data['subtitle'] }}</p>
-    </div>
+  @if (data['comingSoon']) {
+    <section class="coming-soon-panel mb-3">
+      <div class="coming-soon-copy">
+        <span class="badge rounded-pill text-bg-warning w-fit">{{ data['phase'] ?? 'Next Phase' }}</span>
+        <h1 class="page-title">{{ data['title'] }}</h1>
+        <p class="page-subtitle">{{ data['comingSoonMessage'] ?? 'This module is coming soon and is reserved for the next implementation phase.' }}</p>
+      </div>
 
-    @if (data['primaryAction']) {
-      <button class="btn btn-primary" type="button">{{ data['primaryAction'] }}</button>
-    }
-  </section>
-
-  @if (mock?.metrics?.length) {
-    <section class="row g-3 mb-3" aria-label="Module metrics">
-      @for (metric of mock?.metrics; track metric.label) {
-        <div class="col-12 col-sm-6 col-xl-3">
-          <article class="metric-card card h-100" [class]="'tone-' + metric.tone">
-            <div class="card-body">
-              <span class="small text-secondary fw-semibold">{{ metric.label }}</span>
-              <strong class="d-block fs-4 mt-2">{{ metric.value }}</strong>
-            </div>
-          </article>
-        </div>
+      @if (data['primaryAction']) {
+        <button class="btn btn-outline-secondary" type="button" disabled>{{ data['primaryAction'] }}</button>
       }
     </section>
-  }
 
-  <div class="row g-3 mb-3">
-    <article class="col-12 col-lg-6">
-      <div class="card h-100">
-        <div class="card-body">
-          <h2 class="h6">How This Module Is Used</h2>
-          <ul>
-            @for (item of data['capabilities']; track item) {
-              <li>{{ item }}</li>
-            }
-          </ul>
-        </div>
-      </div>
-    </article>
+    <div class="alert alert-warning border-warning-subtle mb-3" role="status">
+      <strong>Coming soon:</strong>
+      This screen is a boilerplate placeholder only. Data entry, workflow actions, and exports are intentionally disabled until this phase is built.
+    </div>
 
-    <article class="col-12 col-lg-6">
-      <div class="card h-100">
-        <div class="card-body">
-          <h2 class="h6">API Hooks</h2>
-          <ul class="endpoint-list">
-            @for (endpoint of data['endpoints']; track endpoint) {
-              <li><code class="app-code">{{ endpoint }}</code></li>
-            }
-          </ul>
-        </div>
-      </div>
-    </article>
-  </div>
-
-  @if (mock) {
-    <section class="d-grid gap-3">
-      @for (table of mock.tables; track table.title) {
-        <article class="card">
+    <div class="row g-3">
+      <article class="col-12 col-lg-6">
+        <div class="card h-100">
           <div class="card-body">
-            <h2 class="h6 mb-3">{{ table.title }}</h2>
-            <div class="table-responsive">
-              <table class="table table-sm table-hover align-middle app-table mb-0">
-                <thead>
-                  <tr>
-                    @for (column of table.columns; track column) {
-                      <th>{{ column }}</th>
-                    }
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (row of table.rows; track $index) {
+            <h2 class="h6">Planned Scope</h2>
+            <ul>
+              @for (item of data['capabilities']; track item) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="col-12 col-lg-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h2 class="h6">Reserved API Hooks</h2>
+            <ul class="endpoint-list">
+              @for (endpoint of data['endpoints']; track endpoint) {
+                <li><code class="app-code">{{ endpoint }}</code></li>
+              }
+            </ul>
+          </div>
+        </div>
+      </article>
+    </div>
+  } @else {
+    <section class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+      <div class="title-block">
+        <span class="badge rounded-pill text-bg-primary w-fit">{{ data['phase'] ?? 'Phase 1' }}</span>
+        <h1 class="page-title">{{ data['title'] }}</h1>
+        <p class="page-subtitle">{{ data['subtitle'] }}</p>
+      </div>
+
+      @if (data['primaryAction']) {
+        <button class="btn btn-primary" type="button">{{ data['primaryAction'] }}</button>
+      }
+    </section>
+
+    @if (mock?.metrics?.length) {
+      <section class="row g-3 mb-3" aria-label="Module metrics">
+        @for (metric of mock?.metrics; track metric.label) {
+          <div class="col-12 col-sm-6 col-xl-3">
+            <article class="metric-card card h-100" [class]="'tone-' + metric.tone">
+              <div class="card-body">
+                <span class="small text-secondary fw-semibold">{{ metric.label }}</span>
+                <strong class="d-block fs-4 mt-2">{{ metric.value }}</strong>
+              </div>
+            </article>
+          </div>
+        }
+      </section>
+    }
+
+    <div class="row g-3 mb-3">
+      <article class="col-12 col-lg-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h2 class="h6">How This Module Is Used</h2>
+            <ul>
+              @for (item of data['capabilities']; track item) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="col-12 col-lg-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h2 class="h6">API Hooks</h2>
+            <ul class="endpoint-list">
+              @for (endpoint of data['endpoints']; track endpoint) {
+                <li><code class="app-code">{{ endpoint }}</code></li>
+              }
+            </ul>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    @if (mock) {
+      <section class="d-grid gap-3">
+        @for (table of mock.tables; track table.title) {
+          <article class="card">
+            <div class="card-body">
+              <h2 class="h6 mb-3">{{ table.title }}</h2>
+              <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle app-table mb-0">
+                  <thead>
                     <tr>
                       @for (column of table.columns; track column) {
-                        <td>{{ rowValue(row, column) }}</td>
+                        <th>{{ column }}</th>
                       }
                     </tr>
-                  }
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    @for (row of table.rows; track $index) {
+                      <tr>
+                        @for (column of table.columns; track column) {
+                          <td>{{ rowValue(row, column) }}</td>
+                        }
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
             </div>
+          </article>
+        }
+      </section>
+
+      @if (mock.notes?.length) {
+        <article class="card mt-3">
+          <div class="card-body">
+            <h2 class="h6">Implementation Notes</h2>
+            <ul>
+              @for (note of mock.notes; track note) {
+                <li>{{ note }}</li>
+              }
+            </ul>
           </div>
         </article>
       }
-    </section>
-
-    @if (mock.notes?.length) {
-      <article class="card mt-3">
-        <div class="card-body">
-          <h2 class="h6">Implementation Notes</h2>
-          <ul>
-            @for (note of mock.notes; track note) {
-              <li>{{ note }}</li>
-            }
-          </ul>
-        </div>
-      </article>
     }
   }
 }

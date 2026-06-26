@@ -7,6 +7,21 @@
     </div>
   </div>
 
+  @if (store.loadingMessage()) {
+    <div class="alert alert-info py-2 mb-0" role="status">
+      <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+      {{ store.loadingMessage() }}
+    </div>
+  }
+
+  @if (store.successMessage()) {
+    <div class="alert alert-success py-2 mb-0" role="status">{{ store.successMessage() }}</div>
+  }
+
+  @if (store.errorMessage()) {
+    <div class="alert alert-danger py-2 mb-0" role="alert">{{ store.errorMessage() }}</div>
+  }
+
   <div class="row g-3">
     <div class="col-md-4">
       <div class="metric-card h-100">

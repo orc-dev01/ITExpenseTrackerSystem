@@ -1,0 +1,18 @@
+.summary-card span {
+  color: var(--app-muted);
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.summary-card strong {
+  display: block;
+  font-size: 1.5rem;
+  margin-top: 0.35rem;
+}
+
+.notification-item.unread {
+  background: rgba(13, 110, 253, 0.04);
+  border-left: 3px solid var(--bs-primary);
+  padding-left: 0.75rem !important;
+}

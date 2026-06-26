@@ -1,0 +1,12 @@
+.summary-card span {
+  color: var(--app-muted);
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.summary-card strong {
+  display: block;
+  font-size: 1.55rem;
+  margin-top: 0.35rem;
+}

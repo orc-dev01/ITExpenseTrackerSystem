@@ -1,0 +1,156 @@
+<section class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+  <div>
+    <span class="badge rounded-pill text-bg-primary">Phase 2</span>
+    <h1 class="page-title">Finance Queue</h1>
+    <p class="page-subtitle">Approved expense requests waiting for Finance processing.</p>
+  </div>
+
+  <button class="btn btn-primary" type="button" [disabled]="loading()" (click)="loadQueue()">
+    {{ loading() ? 'Refreshing...' : 'Refresh Queue' }}
+  </button>
+</section>
+
+@if (loading()) {
+  <div class="alert alert-info py-2" role="status">
+    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+    Loading approved expense requests from backend...
+  </div>
+}
+
+@if (successMessage()) {
+  <div class="alert alert-success py-2" role="status">{{ successMessage() }}</div>
+}
+
+@if (errorMessage()) {
+  <div class="alert alert-danger py-2" role="alert">{{ errorMessage() }}</div>
+}
+
+<section class="row g-3 mb-3">
+  <div class="col-12 col-md-3">
+    <article class="summary-card card h-100">
+      <div class="card-body">
+        <span>Waiting Finance</span>
+        <strong>{{ requests().length }}</strong>
+      </div>
+    </article>
+  </div>
+  <div class="col-12 col-md-3">
+    <article class="summary-card card h-100">
+      <div class="card-body">
+        <span>Ready to Close</span>
+        <strong>{{ readyToCloseCount() }}</strong>
+      </div>
+    </article>
+  </div>
+  <div class="col-12 col-md-3">
+    <article class="summary-card card h-100">
+      <div class="card-body">
+        <span>Urgent</span>
+        <strong>{{ urgentCount() }}</strong>
+      </div>
+    </article>
+  </div>
+  <div class="col-12 col-md-3">
+    <article class="summary-card card h-100">
+      <div class="card-body">
+        <span>Total Amount</span>
+        <strong>{{ formatCurrency(totalAmount()) }}</strong>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-body">
+    <h2 class="h6 mb-3">Approved Expense Requests</h2>
+
+    @if (requests().length) {
+      <div class="table-responsive">
+        <table class="table table-hover align-middle app-table mb-0">
+          <thead>
+            <tr>
+              <th>Request No</th>
+              <th>Title</th>
+              <th>Requester</th>
+              <th>Department</th>
+              <th>Approved Amount</th>
+              <th>Finance Status</th>
+              <th>Submitted</th>
+              <th>Urgent</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (request of requests(); track request.id) {
+              <tr>
+                <td><a class="fw-semibold" [routerLink]="['/requests', request.id]">{{ request.requestNumber }}</a></td>
+                <td>{{ request.title }}</td>
+                <td>{{ request.requesterName }}</td>
+                <td>{{ request.department }}</td>
+                <td>{{ formatCurrency(request.totalAmount) }}</td>
+                <td>
+                  <span class="badge rounded-pill {{ statusBadgeClass(financeStatus(request)) }}">
+                    {{ statusLabel(financeStatus(request)) }}
+                  </span>
+                </td>
+                <td>{{ formatDate(request.submittedAt) }}</td>
+                <td>
+                  @if (request.urgent) {
+                    <span class="badge rounded-pill text-bg-danger">Urgent</span>
+                  } @else {
+                    <span class="text-secondary">No</span>
+                  }
+                </td>
+                <td>
+                  <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-sm btn-outline-secondary" [routerLink]="['/requests', request.id]">View</a>
+                    @if (financeStatus(request) === 'Pending' || financeStatus(request) === 'OnHold') {
+                      <button
+                        class="btn btn-sm btn-outline-primary"
+                        type="button"
+                        [disabled]="isProcessing(request.id)"
+                        (click)="updateFinanceStatus(request, 'InProcess')"
+                      >
+                        {{ isProcessing(request.id) ? 'Updating...' : 'Start Processing' }}
+                      </button>
+                    }
+                    @if (financeStatus(request) !== 'Processed') {
+                      <button
+                        class="btn btn-sm btn-primary"
+                        type="button"
+                        [disabled]="isProcessing(request.id)"
+                        (click)="updateFinanceStatus(request, 'Processed')"
+                      >
+                        {{ isProcessing(request.id) ? 'Updating...' : 'Mark Processed' }}
+                      </button>
+                    }
+                    @if (financeStatus(request) !== 'OnHold' && financeStatus(request) !== 'Processed') {
+                      <button
+                        class="btn btn-sm btn-outline-warning"
+                        type="button"
+                        [disabled]="isProcessing(request.id)"
+                        (click)="updateFinanceStatus(request, 'OnHold')"
+                      >
+                        On Hold
+                      </button>
+                    }
+                    <button
+                      class="btn btn-sm btn-success"
+                      type="button"
+                      [disabled]="isProcessing(request.id) || financeStatus(request) !== 'Processed'"
+                      (click)="closeRequest(request)"
+                    >
+                      {{ isProcessing(request.id) ? 'Closing...' : 'Close Request' }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="text-secondary mb-0">No approved expense requests are waiting for Finance.</p>
+    }
+  </div>
+</section>

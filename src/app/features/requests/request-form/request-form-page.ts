@@ -1,8 +1,9 @@
 ﻿import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { RequestType } from '@core/models/domain.model';
-import { LocalExpenseLineItem, RequestStoreService } from '../request-store.service';
+import { ExpenseRequestStatus, RequestType } from '@core/models/domain.model';
+import { LocalExpenseLineItem, LocalExpenseRequest, RequestStoreService } from '../request-store.service';
 
 @Component({
   selector: 'app-request-form-page',
@@ -14,9 +15,11 @@ export class RequestFormPage {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly store = inject(RequestStoreService);
-  private readonly draftId = this.route.snapshot.paramMap.get('id');
-  readonly isEditMode = Boolean(this.draftId);
+  readonly store = inject(RequestStoreService);
+  private readonly editableRequestId = this.route.snapshot.paramMap.get('id');
+  readonly editableRequest = this.findEditableRequest();
+  readonly isEditMode = Boolean(this.editableRequestId);
+  readonly validationMessage = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     title: ['', Validators.required],
@@ -30,7 +33,7 @@ export class RequestFormPage {
   });
 
   constructor() {
-    this.loadDraftForEdit();
+    this.loadEditableRequest();
   }
 
   get lineItems() {
@@ -42,6 +45,26 @@ export class RequestFormPage {
       const item = itemGroup.getRawValue();
       return sum + item.quantity * item.unitAmount;
     }, 0);
+  }
+
+  get pageTitle(): string {
+    if (!this.isEditMode) {
+      return 'New Expense Request';
+    }
+    return this.editableRequest?.status === 'Returned' ? 'Edit Returned Request' : 'Edit Draft Request';
+  }
+
+  get pageSubtitle(): string {
+    if (!this.isEditMode) {
+      return 'Creates a localStorage request that can move through endorsement, approval, and Finance processing.';
+    }
+    return this.editableRequest?.status === 'Returned'
+      ? 'Review the return remarks, update the request, and resubmit it to endorsement.'
+      : 'Update your saved draft before submitting it to workflow.';
+  }
+
+  get returnRemarks(): string | null {
+    return this.editableRequest?.status === 'Returned' ? this.editableRequest.remarks ?? null : null;
   }
 
   addLineItem(): void {
@@ -64,22 +87,24 @@ export class RequestFormPage {
   }
 
   private save(submit: boolean): void {
+    this.validationMessage.set(null);
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.validationMessage.set('Please complete all required request fields before continuing.');
       return;
     }
 
     const command = this.buildCommand();
-    if (this.isEditMode && this.draftId) {
-      const updated = this.store.updateDraft(this.draftId, command);
-      if (updated && submit) {
-        this.store.submit(updated.id);
-      }
+    if (this.isEditMode && this.editableRequestId) {
+      this.store.saveEditableRequest(this.editableRequestId, command, submit, () => {
+        void this.router.navigate(['/requests']);
+      });
     } else {
-      this.store.create(command, submit);
+      this.store.create(command, submit, () => {
+        void this.router.navigate(['/requests']);
+      });
     }
-
-    void this.router.navigate(['/requests']);
   }
 
   private buildCommand() {
@@ -103,31 +128,43 @@ export class RequestFormPage {
     };
   }
 
-  private loadDraftForEdit(): void {
-    if (!this.draftId) {
+  private loadEditableRequest(): void {
+    if (!this.editableRequestId) {
       return;
     }
 
-    const draft = this.store.requests().find((request) => request.id === this.draftId && request.status === 'Draft');
-    if (!draft) {
+    const request = this.editableRequest;
+    if (!request) {
       void this.router.navigate(['/requests']);
       return;
     }
 
     this.form.patchValue({
-      title: draft.title,
-      justification: draft.justification,
-      department: draft.department,
-      costCenter: draft.costCenter,
-      project: draft.project ?? '',
-      requestType: draft.requestType,
-      urgent: draft.urgent
+      title: request.title,
+      justification: request.justification,
+      department: request.department,
+      costCenter: request.costCenter,
+      project: request.project ?? '',
+      requestType: request.requestType,
+      urgent: request.urgent
     });
 
     this.lineItems.clear();
-    for (const item of draft.lineItems) {
+    for (const item of request.lineItems) {
       this.lineItems.push(this.createLineItemGroup(item));
     }
+  }
+
+  private findEditableRequest(): LocalExpenseRequest | null {
+    if (!this.editableRequestId) {
+      return null;
+    }
+
+    return this.store.requests().find((request) => request.id === this.editableRequestId && this.isEditableStatus(request.status)) ?? null;
+  }
+
+  private isEditableStatus(status: ExpenseRequestStatus): boolean {
+    return status === 'Draft' || status === 'Returned';
   }
 
   private createLineItemGroup(item?: LocalExpenseLineItem) {

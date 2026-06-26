@@ -6,6 +6,10 @@ const router = express.Router();
 
 router.use(requireAuth);
 
+router.get('/request-dashboard', requireAnyRole(['Requester', 'Endorser', 'Approver', 'FinanceViewer', 'Admin']), (req, res) => {
+  return res.json(store.requestDashboardSummary(req.user));
+});
+
 router.get('/spend-dashboard', requireAnyRole(['Approver', 'FinanceViewer', 'Admin']), (_req, res) => {
   const approved = sumByStatus(['Approved', 'Closed']);
   const pending = sumByStatus(['PendingEndorsement', 'PendingApproval']);
