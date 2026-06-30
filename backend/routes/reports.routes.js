@@ -1,16 +1,20 @@
 const express = require('express');
-const store = require('../store/dummy-store');
+const store = require('../store');
 const { requireAnyRole, requireAuth } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
 router.use(requireAuth);
 
-router.get('/request-dashboard', requireAnyRole(['Requester', 'Endorser', 'Approver', 'FinanceViewer', 'Admin']), (req, res) => {
-  return res.json(store.requestDashboardSummary(req.user));
+router.get('/request-dashboard', requireAnyRole(['Requester', 'Endorser', 'Approver', 'FinanceViewer', 'Admin']), async (req, res) => {
+  return res.json(await store.requestDashboardSummary(req.user));
 });
 
-router.get('/spend-dashboard', requireAnyRole(['Approver', 'FinanceViewer', 'Admin']), (_req, res) => {
+router.get('/spend-dashboard', requireAnyRole(['Approver', 'FinanceViewer', 'Admin']), async (_req, res) => {
+  if (store.spendDashboard) {
+    return res.json(await store.spendDashboard());
+  }
+
   const approved = sumByStatus(['Approved', 'Closed']);
   const pending = sumByStatus(['PendingEndorsement', 'PendingApproval']);
   return res.json({
@@ -22,7 +26,11 @@ router.get('/spend-dashboard', requireAnyRole(['Approver', 'FinanceViewer', 'Adm
   });
 });
 
-router.get('/expense-summary', requireAnyRole(['Approver', 'FinanceViewer', 'Admin']), (_req, res) => {
+router.get('/expense-summary', requireAnyRole(['Approver', 'FinanceViewer', 'Admin']), async (_req, res) => {
+  if (store.expenseSummary) {
+    return res.json(await store.expenseSummary());
+  }
+
   return res.json({
     totalRequests: store.state.requests.length,
     totalAmount: store.state.requests.reduce((sum, request) => sum + request.totalAmount, 0),
@@ -30,8 +38,10 @@ router.get('/expense-summary', requireAnyRole(['Approver', 'FinanceViewer', 'Adm
   });
 });
 
-router.get('/approved-requests.csv', requireAnyRole(['FinanceViewer', 'Admin']), (_req, res) => {
-  const approved = store.state.requests.filter((request) => ['Approved', 'Closed'].includes(request.status));
+router.get('/approved-requests.csv', requireAnyRole(['FinanceViewer', 'Admin']), async (_req, res) => {
+  const approved = store.approvedRequestsCsvRows
+    ? await store.approvedRequestsCsvRows()
+    : store.state.requests.filter((request) => ['Approved', 'Closed'].includes(request.status));
   const rows = [
     ['Request No', 'Title', 'Requester', 'Department', 'Status', 'Amount'],
     ...approved.map((request) => [request.requestNumber, request.title, request.requesterName, request.department, request.status, request.totalAmount])

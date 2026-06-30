@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const store = require('../store/dummy-store');
+const store = require('../store');
 const { requireAnyRole, requireAuth } = require('../middleware/auth.middleware');
 const { validateLineItem, validateRequestCommand } = require('../validators/request.validator');
 
@@ -12,29 +12,29 @@ const maxUploadBytes = 5 * 1024 * 1024;
 
 router.use(requireAuth);
 
-router.get('/', (req, res) => {
-  return res.json(store.listRequestsForUser(req.user));
+router.get('/', async (req, res) => {
+  return res.json(await store.listRequestsForUser(req.user));
 });
 
-router.post('/drafts', requireAnyRole(['Requester', 'Admin']), (req, res) => {
-  const validation = validateRequestCommand(req.body, store.state);
+router.post('/drafts', requireAnyRole(['Requester', 'Admin']), async (req, res) => {
+  const validation = validateRequestCommand(req.body, await referenceState());
   if (!validation.valid) {
     return validationError(res, validation.errors);
   }
 
-  const request = store.createRequest(validation.value, req.user, false);
+  const request = await store.createRequest(validation.value, req.user, false);
   return res.status(201).json(request);
 });
 
-router.post('/submit', requireAnyRole(['Requester', 'Admin']), (req, res) => {
+router.post('/submit', requireAnyRole(['Requester', 'Admin']), async (req, res) => {
   if (req.body.id) {
-    const existing = store.findRequest(req.body.id);
+    const existing = await store.findRequest(req.body.id);
     if (!existing) {
       return res.status(404).json({ message: 'Request not found.' });
     }
 
     const action = existing.status === 'Returned' ? 'Resubmitted' : 'Submitted';
-    const result = store.transitionRequestStrict(req.body.id, req.user, 'PendingEndorsement', action, undefined, {
+    const result = await store.transitionRequestStrict(req.body.id, req.user, 'PendingEndorsement', action, undefined, {
       fromStatuses: ['Draft', 'Returned'],
       ownerOnly: true,
       requiredRoles: ['Requester']
@@ -42,41 +42,41 @@ router.post('/submit', requireAnyRole(['Requester', 'Admin']), (req, res) => {
     return sendTransitionResult(res, result);
   }
 
-  const validation = validateRequestCommand(req.body, store.state);
+  const validation = validateRequestCommand(req.body, await referenceState());
   if (!validation.valid) {
     return validationError(res, validation.errors);
   }
 
-  const request = store.createRequest(validation.value, req.user, true);
+  const request = await store.createRequest(validation.value, req.user, true);
   return res.status(201).json(request);
 });
 
-router.patch('/:id/draft', requireAnyRole(['Requester', 'Admin']), (req, res) => {
-  const validation = validateRequestCommand(req.body, store.state);
+router.patch('/:id/draft', requireAnyRole(['Requester', 'Admin']), async (req, res) => {
+  const validation = validateRequestCommand(req.body, await referenceState());
   if (!validation.valid) {
     return validationError(res, validation.errors);
   }
 
-  const request = store.updateDraft(req.params.id, validation.value, req.user);
+  const request = await store.updateDraft(req.params.id, validation.value, req.user);
   return request ? res.json(request) : res.status(404).json({ message: 'Request not found or cannot be edited.' });
 });
 
-router.delete('/:id/draft', requireAnyRole(['Requester', 'Admin']), (req, res) => {
-  const deleted = store.deleteDraft(req.params.id, req.user);
+router.delete('/:id/draft', requireAnyRole(['Requester', 'Admin']), async (req, res) => {
+  const deleted = await store.deleteDraft(req.params.id, req.user);
   return deleted ? res.status(204).send() : res.status(404).json({ message: 'Draft request not found or cannot be deleted.' });
 });
 
-router.get('/:id', (req, res) => {
-  const request = store.findRequest(req.params.id);
-  if (!request || !store.userCanReadRequest(req.user, request)) {
+router.get('/:id', async (req, res) => {
+  const request = await store.findRequest(req.params.id);
+  if (!request || !(await store.userCanReadRequest(req.user, request))) {
     return res.status(404).json({ message: 'Request not found.' });
   }
 
   return res.json(request);
 });
 
-router.post('/:id/cancel', requireAnyRole(['Requester', 'Admin']), (req, res) => {
-  const result = store.transitionRequestStrict(req.params.id, req.user, 'Cancelled', 'Cancelled', req.body.remarks, {
+router.post('/:id/cancel', requireAnyRole(['Requester', 'Admin']), async (req, res) => {
+  const result = await store.transitionRequestStrict(req.params.id, req.user, 'Cancelled', 'Cancelled', req.body.remarks, {
     fromStatuses: ['Draft', 'Returned', 'PendingEndorsement'],
     ownerOnly: true,
     requiredRoles: ['Requester']
@@ -84,17 +84,17 @@ router.post('/:id/cancel', requireAnyRole(['Requester', 'Admin']), (req, res) =>
   return sendTransitionResult(res, result);
 });
 
-router.get('/:requestId/line-items', (req, res) => {
-  const request = store.findRequest(req.params.requestId);
-  if (!request || !store.userCanReadRequest(req.user, request)) {
+router.get('/:requestId/line-items', async (req, res) => {
+  const request = await store.findRequest(req.params.requestId);
+  if (!request || !(await store.userCanReadRequest(req.user, request))) {
     return res.status(404).json({ message: 'Request not found.' });
   }
 
   return res.json(request.lineItems);
 });
 
-router.post('/:requestId/line-items', requireAnyRole(['Requester', 'Admin']), (req, res) => {
-  const request = store.findRequest(req.params.requestId);
+router.post('/:requestId/line-items', requireAnyRole(['Requester', 'Admin']), async (req, res) => {
+  const request = await store.findRequest(req.params.requestId);
   if (!request) {
     return res.status(404).json({ message: 'Request not found.' });
   }
@@ -104,9 +104,14 @@ router.post('/:requestId/line-items', requireAnyRole(['Requester', 'Admin']), (r
   }
 
   const errors = [];
-  const validLineItem = validateLineItem(req.body, store.state, errors);
+  const validLineItem = validateLineItem(req.body, await referenceState(), errors);
   if (errors.length) {
     return validationError(res, errors);
+  }
+
+  if (store.addLineItem) {
+    const lineItem = await store.addLineItem(request.id, validLineItem);
+    return res.status(201).json(lineItem);
   }
 
   const lineItem = {
@@ -119,18 +124,18 @@ router.post('/:requestId/line-items', requireAnyRole(['Requester', 'Admin']), (r
   return res.status(201).json(lineItem);
 });
 
-router.get('/:requestId/line-items/:lineItemId/attachments', (req, res) => {
-  const result = store.findLineItem(req.params.requestId, req.params.lineItemId);
-  if (!result || !store.userCanReadRequest(req.user, result.request)) {
+router.get('/:requestId/line-items/:lineItemId/attachments', async (req, res) => {
+  const result = await store.findLineItem(req.params.requestId, req.params.lineItemId);
+  if (!result || !(await store.userCanReadRequest(req.user, result.request))) {
     return res.status(404).json({ message: 'Line item not found.' });
   }
 
-  return res.json(store.listAttachments(result.request.id, result.lineItem.id));
+  return res.json(await store.listAttachments(result.request.id, result.lineItem.id));
 });
 
-router.post('/:requestId/line-items/:lineItemId/attachments', requireAnyRole(['Requester', 'Admin']), (req, res) => {
-  const result = store.findLineItem(req.params.requestId, req.params.lineItemId);
-  if (!result || !store.userCanReadRequest(req.user, result.request)) {
+router.post('/:requestId/line-items/:lineItemId/attachments', requireAnyRole(['Requester', 'Admin']), async (req, res) => {
+  const result = await store.findLineItem(req.params.requestId, req.params.lineItemId);
+  if (!result || !(await store.userCanReadRequest(req.user, result.request))) {
     return res.status(404).json({ message: 'Line item not found.' });
   }
 
@@ -157,7 +162,7 @@ router.post('/:requestId/line-items/:lineItemId/attachments', requireAnyRole(['R
   const storagePath = path.join(uploadDir, storedName);
   fs.writeFileSync(storagePath, buffer);
 
-  const attachment = store.addAttachment({
+  const attachment = await store.addAttachment({
     requestId: result.request.id,
     lineItemId: result.lineItem.id,
     fileName,
@@ -169,9 +174,9 @@ router.post('/:requestId/line-items/:lineItemId/attachments', requireAnyRole(['R
   return res.status(201).json(attachment);
 });
 
-router.get('/:requestId/line-items/:lineItemId/links', (req, res) => {
-  const request = store.findRequest(req.params.requestId);
-  if (!request || !store.userCanReadRequest(req.user, request)) {
+router.get('/:requestId/line-items/:lineItemId/links', async (req, res) => {
+  const request = await store.findRequest(req.params.requestId);
+  if (!request || !(await store.userCanReadRequest(req.user, request))) {
     return res.status(404).json({ message: 'Line item not found.' });
   }
 
@@ -190,4 +195,8 @@ function validationError(res, errors) {
 
 function sendTransitionResult(res, result) {
   return result.ok ? res.json(result.request) : res.status(result.status).json({ message: result.message });
+}
+
+async function referenceState() {
+  return store.getValidationState ? store.getValidationState() : store.state;
 }

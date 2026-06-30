@@ -24,6 +24,13 @@ backend/db/02-schema.sql
 backend/db/03-seed-reference-data.sql
 ```
 
+If you already created the database before backend SQL integration was added,
+also run this once:
+
+```text
+backend/db/04-migrate-existing-database.sql
+```
+
 What they create:
 
 - Database: `ITExpense`
@@ -87,6 +94,7 @@ Copy `.env.example` to `.env` on the server and update the values:
 NODE_ENV=production
 PORT=5000
 CLIENT_ORIGIN=https://your-real-domain
+DATA_STORE=sqlserver
 DB_SERVER=your-sql-server
 DB_PORT=1433
 DB_NAME=ITExpense
@@ -96,6 +104,19 @@ DB_ENCRYPT=true
 DB_TRUST_SERVER_CERTIFICATE=false
 JWT_SECRET=your-long-random-secret
 UPLOAD_DIR=C:\ITExpense\uploads
+```
+
+For your local SQL Express instance, use this shape:
+
+```text
+DATA_STORE=sqlserver
+DB_SERVER=MARKMAYO\SQLEXPRESS
+DB_NAME=ITExpense
+DB_USER=it_expense_app
+DB_PASSWORD=the-password-you-used-in-01-create-database.sql
+DB_ENCRYPT=false
+DB_TRUST_SERVER_CERTIFICATE=true
+JWT_SECRET=replace-with-a-long-random-secret
 ```
 
 Create the upload folder:
@@ -126,9 +147,15 @@ Check backend syntax:
 npm.cmd run check:backend
 ```
 
-Current note: the backend is still wired to `backend/store/dummy-store.js`. The database schema is now ready, but the next implementation step is to replace the dummy store with SQL Server repositories using the same route contracts.
+Check SQL Server connectivity:
 
-Recommended backend packages for the SQL integration step:
+```powershell
+npm.cmd run check:sql
+```
+
+The backend now switches to SQL Server when `DATA_STORE=sqlserver` is set, or when database credentials are present. Without those values, it keeps using the dummy store for local demos.
+
+SQL/auth packages used by the backend:
 
 ```powershell
 npm install mssql dotenv bcryptjs jsonwebtoken
@@ -213,6 +240,7 @@ Before go-live:
 - `.env` contains real database and JWT secrets.
 - Angular build succeeds.
 - Backend syntax check succeeds.
+- SQL connection check succeeds with `npm.cmd run check:sql`.
 - API health endpoint returns `ok`.
 - Login is converted from dummy passwords to hashed SQL user passwords.
 - File uploads write to `UPLOAD_DIR`.

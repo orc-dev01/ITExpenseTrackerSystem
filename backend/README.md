@@ -1,6 +1,11 @@
 # IT Expense Backend
 
-This is a temporary Express.js API with in-memory dummy data. It is separate from the Angular frontend and mirrors the endpoint names already declared in `src/app/core/api/api-endpoints.ts`.
+This Express.js API can run in two modes:
+
+- Dummy mode, using in-memory data from `backend/store/dummy-store.js`.
+- SQL Server mode, using the `app` schema in the `ITExpense` database.
+
+Set `DATA_STORE=sqlserver` and the `DB_*` environment variables to use SQL Server.
 
 ## Structure
 
@@ -19,7 +24,13 @@ backend
     reports.routes.js          Dashboard, summary, CSV export
     misc.routes.js             Budgets, disbursement, notifications, health
   store
+    index.js                   Selects dummy or SQL Server store
     dummy-store.js             In-memory data access layer
+    sql-store.js               SQL Server data access layer
+  db
+    sql-server.js              SQL Server connection pool
+  config
+    env.js                     Environment variable loading
 ```
 
 ## Run
@@ -64,16 +75,23 @@ Invoke-RestMethod -Uri http://localhost:5000/api/reports/spend-dashboard -Header
 
 ## SQL Server Integration Later
 
-Keep the route files stable and replace `backend/store/dummy-store.js` with SQL Server repositories later. The expected next structure is:
+SQL Server integration is now wired through `backend/store/sql-store.js`.
+Use this local SQL Express shape in `.env`:
 
 ```text
-backend
-  db
-    sql-server.js              SQL Server connection pool
-  repositories
-    request.repository.js
-    user.repository.js
-    workflow.repository.js
+DATA_STORE=sqlserver
+DB_SERVER=MARKMAYO\SQLEXPRESS
+DB_NAME=ITExpense
+DB_USER=it_expense_app
+DB_PASSWORD=your-password
+DB_ENCRYPT=false
+DB_TRUST_SERVER_CERTIFICATE=true
 ```
 
-The frontend should continue calling the same `/api/...` endpoints.
+Then verify with:
+
+```bash
+npm run check:sql
+```
+
+The frontend continues calling the same `/api/...` endpoints.

@@ -1,32 +1,31 @@
 const crypto = require('crypto');
 const express = require('express');
 const fs = require('fs');
-const store = require('../store/dummy-store');
+const store = require('../store');
 const { requireAnyRole, requireAuth } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
-router.get('/health', (_req, res) => {
-  return res.json({ status: 'ok', service: 'it-expense-api', timestamp: new Date().toISOString() });
+router.get('/health', async (_req, res) => {
+  return res.json(store.health ? await store.health() : { status: 'ok', service: 'it-expense-api', dataStore: 'dummy', timestamp: new Date().toISOString() });
 });
 
 router.use('/budgets', requireAuth, requireAnyRole(['FinanceViewer', 'Admin']));
-router.get('/budgets', (_req, res) => res.json([{ id: 'budget-2026-q3-itops-hw', period: '2026-Q3', department: 'IT Operations', category: 'Hardware', budget: 500000, actual: 310000, available: 190000 }]));
+router.get('/budgets', async (_req, res) => res.json(store.budgets ? await store.budgets() : [{ id: 'budget-2026-q3-itops-hw', period: '2026-Q3', department: 'IT Operations', category: 'Hardware', budget: 500000, actual: 310000, available: 190000 }]));
 router.post('/budgets/upload', (_req, res) => res.status(202).json({ message: 'Dummy budget upload accepted.' }));
-router.get('/budgets/availability', (_req, res) => res.json({ available: 190000, status: 'Healthy' }));
-router.get('/budgets/threshold-alerts', (_req, res) => res.json([]));
+router.get('/budgets/availability', async (_req, res) => res.json(store.budgetAvailability ? await store.budgetAvailability() : { available: 190000, status: 'Healthy' }));
+router.get('/budgets/threshold-alerts', async (_req, res) => res.json(store.thresholdAlerts ? await store.thresholdAlerts() : []));
 
 router.use('/disbursement', requireAuth, requireAnyRole(['FinanceViewer', 'Admin']));
-router.get('/disbursement/accounting', (req, res) => {
+router.get('/disbursement/accounting', async (req, res) => {
+  const requests = await store.listRequestsForUser(req.user);
   return res.json(
-    store
-      .listRequestsForUser(req.user)
-      .filter((request) => request.status === 'Approved' && request.requestType === 'Expense')
+    requests.filter((request) => request.status === 'Approved' && request.requestType === 'Expense')
   );
 });
 router.get('/disbursement/purchasing', (_req, res) => res.json([]));
-router.patch('/disbursement/:id/status', (req, res) => {
-  const result = store.updateDisbursementStatus(req.params.id, req.user, req.body.status);
+router.patch('/disbursement/:id/status', async (req, res) => {
+  const result = await store.updateDisbursementStatus(req.params.id, req.user, req.body.status);
   return result.ok ? res.json(result.request) : res.status(result.status).json({ message: result.message });
 });
 
@@ -41,18 +40,18 @@ router.post('/reimbursements/submit', (req, res) => res.status(201).json({ id: c
 router.patch('/reimbursements/:id/payment-status', (req, res) => res.json({ id: req.params.id, paymentStatus: req.body.paymentStatus ?? 'Pending' }));
 
 router.use('/notifications', requireAuth);
-router.get('/notifications', (req, res) => res.json(store.listNotificationsForUser(req.user)));
-router.get('/notifications/unread-count', (req, res) => res.json({ count: store.unreadNotificationCount(req.user) }));
-router.patch('/notifications/read-all', (req, res) => res.json(store.markAllNotificationsRead(req.user)));
-router.patch('/notifications/:id/read', (req, res) => {
-  const notification = store.markNotificationRead(req.params.id, req.user);
+router.get('/notifications', async (req, res) => res.json(await store.listNotificationsForUser(req.user)));
+router.get('/notifications/unread-count', async (req, res) => res.json({ count: await store.unreadNotificationCount(req.user) }));
+router.patch('/notifications/read-all', async (req, res) => res.json(await store.markAllNotificationsRead(req.user)));
+router.patch('/notifications/:id/read', async (req, res) => {
+  const notification = await store.markNotificationRead(req.params.id, req.user);
   return notification ? res.json(notification) : res.status(404).json({ message: 'Notification not found.' });
 });
 
-router.get('/files/:fileId/download', requireAuth, (req, res) => {
-  const attachment = store.findAttachment(req.params.fileId);
-  const request = attachment ? store.findRequest(attachment.requestId) : null;
-  if (!attachment || !request || !store.userCanReadRequest(req.user, request)) {
+router.get('/files/:fileId/download', requireAuth, async (req, res) => {
+  const attachment = await store.findAttachment(req.params.fileId);
+  const request = attachment ? await store.findRequest(attachment.requestId) : null;
+  if (!attachment || !request || !(await store.userCanReadRequest(req.user, request))) {
     return res.status(404).json({ message: 'File not found.' });
   }
 

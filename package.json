@@ -9,7 +9,8 @@
     "start:api": "node backend/server.js",
     "dev:api": "node --watch backend/server.js",
     "build": "ng build",
-    "check:backend": "node --check backend/server.js && node --check backend/routes/auth.routes.js && node --check backend/routes/requests.routes.js && node --check backend/routes/workflow.routes.js && node --check backend/routes/misc.routes.js && node --check backend/store/dummy-store.js",
+    "check:backend": "node --check backend/server.js && node --check backend/middleware/auth.middleware.js && node --check backend/db/sql-server.js && node --check backend/store/dummy-store.js && node --check backend/store/sql-store.js && node --check backend/routes/auth.routes.js && node --check backend/routes/requests.routes.js && node --check backend/routes/workflow.routes.js && node --check backend/routes/reference.routes.js && node --check backend/routes/reports.routes.js && node --check backend/routes/misc.routes.js",
+    "check:sql": "node backend/scripts/test-sql-connection.js",
     "watch": "ng build --watch --configuration development"
   },
   "dependencies": {
@@ -19,9 +20,13 @@
     "@angular/forms": "^22.0.0",
     "@angular/platform-browser": "^22.0.0",
     "@angular/router": "^22.0.0",
+    "bcryptjs": "^3.0.3",
     "bootstrap": "^5.3.8",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mssql": "^12.6.0",
     "rxjs": "^7.8.0",
     "tslib": "^2.8.0"
   },

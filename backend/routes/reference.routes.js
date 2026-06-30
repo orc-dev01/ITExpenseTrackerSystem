@@ -1,18 +1,22 @@
 const express = require('express');
-const store = require('../store/dummy-store');
+const store = require('../store');
 const { requireAuth } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
 router.use(requireAuth);
 
-router.get('/users', (_req, res) => res.json(store.state.users.map(store.publicUser)));
-router.get('/departments', (_req, res) => res.json(store.state.departments));
-router.get('/cost-centers', (_req, res) => res.json(store.state.costCenters));
-router.get('/expense-categories', (_req, res) => res.json(store.state.categories));
-router.get('/projects', (_req, res) => res.json(store.state.projects));
+router.get('/users', async (_req, res) => res.json(store.listUsers ? await store.listUsers() : store.state.users.map(store.publicUser)));
+router.get('/departments', async (_req, res) => res.json(store.listDepartments ? await store.listDepartments() : store.state.departments));
+router.get('/cost-centers', async (_req, res) => res.json(store.listCostCenters ? await store.listCostCenters() : store.state.costCenters));
+router.get('/expense-categories', async (_req, res) => res.json(store.listCategories ? await store.listCategories() : store.state.categories));
+router.get('/projects', async (_req, res) => res.json(store.listProjects ? await store.listProjects() : store.state.projects));
 
-router.get('/approval-matrix', (_req, res) => {
+router.get('/approval-matrix', async (_req, res) => {
+  if (store.listApprovalMatrix) {
+    return res.json(await store.listApprovalMatrix());
+  }
+
   return res.json([
     { id: 'matrix-1', departmentId: 'it-operations', categoryId: 'hardware', amountMin: 0, amountMax: 100000, endorserRole: 'Endorser', approverRole: 'Approver' },
     { id: 'matrix-2', departmentId: 'it-operations', categoryId: 'hardware', amountMin: 100001, amountMax: null, endorserRole: 'Endorser', approverRole: 'Approver', secondaryApproverRole: 'FinanceViewer' },
@@ -20,7 +24,11 @@ router.get('/approval-matrix', (_req, res) => {
   ]);
 });
 
-router.get('/coa-accounts', (_req, res) => {
+router.get('/coa-accounts', async (_req, res) => {
+  if (store.listCoaAccounts) {
+    return res.json(await store.listCoaAccounts());
+  }
+
   return res.json([
     { id: 'coa-6100', code: '6100', name: 'IT Hardware Expense', parent: 'Operating Expense', active: true },
     { id: 'coa-6200', code: '6200', name: 'IT Software Subscription', parent: 'Operating Expense', active: true },

@@ -1,14 +1,17 @@
 const express = require('express');
-const store = require('../store/dummy-store');
+const store = require('../store');
 const { createAccessToken, requireAuth } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  const user = store.findUserByEmail(email);
+  const user = await store.findUserByEmail(email);
+  const passwordMatches = store.verifyPassword
+    ? await store.verifyPassword(user, password)
+    : user?.password === password;
 
-  if (!user || user.password !== password) {
+  if (!user || !passwordMatches) {
     return res.status(401).json({ message: 'Invalid email or password.' });
   }
 

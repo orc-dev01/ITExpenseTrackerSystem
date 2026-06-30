@@ -15,3 +15,4 @@ Error: Port 4200 is already in use. Use '--port' to specify a different port.
     at emitErrorNT (node:net:2044:8)
     at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
 Node.js v26.3.0
+^C

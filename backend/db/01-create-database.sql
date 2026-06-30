@@ -34,7 +34,7 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = N'it_expense_app')
 BEGIN
   CREATE LOGIN it_expense_app
-    WITH PASSWORD = N'CHANGE_THIS_STRONG_PASSWORD',
+    WITH PASSWORD = N'ITExpense_ChangeMe_2026!Strong',
     CHECK_POLICY = ON,
     CHECK_EXPIRATION = ON;
 END;
