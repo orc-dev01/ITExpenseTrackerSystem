@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+const { boolEnv } = require('../config/env');
 const { sql, query, transaction, txRequest } = require('../db/sql-server');
 
 const state = {
@@ -81,6 +82,10 @@ async function verifyPassword(user, password) {
   }
 
   if (user.passwordHash.startsWith('DEV_ONLY_')) {
+    if (process.env.NODE_ENV === 'production' && !boolEnv('ALLOW_DEV_PASSWORDS', false)) {
+      return false;
+    }
+
     return user.passwordHash.replace('DEV_ONLY_', '') === password;
   }
 

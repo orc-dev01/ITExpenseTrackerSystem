@@ -47,9 +47,12 @@ http://localhost:5000/api
 
 The Angular development environment already points to that base URL.
 
-## Dummy Login Accounts
+## Demo Login Accounts
 
-All passwords are:
+Demo accounts are available only when the dummy store is used or when
+`backend/db/06-seed-demo-users.sql` has been run for UAT.
+
+All demo passwords are:
 
 ```text
 password123

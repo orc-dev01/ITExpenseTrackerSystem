@@ -116,10 +116,6 @@ export class RequestListPage {
     this.pendingRemarks.set(null);
   }
 
-  reset(): void {
-    this.store.resetMockData();
-  }
-
   updateSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);

@@ -467,6 +467,15 @@ export class RequestStoreService {
   }
 
   resetMockData(): void {
+    if (this.usesBackend()) {
+      localStorage.removeItem(REQUEST_STORAGE_KEY);
+      localStorage.removeItem(AUDIT_STORAGE_KEY);
+      this.requestState.set([]);
+      this.auditState.set([]);
+      this.refreshFromBackend();
+      return;
+    }
+
     localStorage.removeItem(REQUEST_STORAGE_KEY);
     localStorage.removeItem(AUDIT_STORAGE_KEY);
     const requests = this.seedRequests();
@@ -499,9 +508,6 @@ export class RequestStoreService {
       disbursementStatus === "Processed"
     ) {
       actions.push("close");
-    }
-    if (roles.includes("Admin")) {
-      actions.push("reset");
     }
     return actions;
   }
@@ -798,6 +804,9 @@ export class RequestStoreService {
   private loadRequests(): LocalExpenseRequest[] {
     const raw = localStorage.getItem(REQUEST_STORAGE_KEY);
     if (!raw) {
+      if (this.usesBackend()) {
+        return [];
+      }
       const seed = this.seedRequests();
       localStorage.setItem(REQUEST_STORAGE_KEY, JSON.stringify(seed));
       return seed;
@@ -805,6 +814,9 @@ export class RequestStoreService {
     try {
       return JSON.parse(raw) as LocalExpenseRequest[];
     } catch {
+      if (this.usesBackend()) {
+        return [];
+      }
       return this.seedRequests();
     }
   }
@@ -812,6 +824,9 @@ export class RequestStoreService {
   private loadAuditLogs(): LocalAuditLog[] {
     const raw = localStorage.getItem(AUDIT_STORAGE_KEY);
     if (!raw) {
+      if (this.usesBackend()) {
+        return [];
+      }
       const seed = this.seedAuditLogs(this.requestState());
       localStorage.setItem(AUDIT_STORAGE_KEY, JSON.stringify(seed));
       return seed;
@@ -821,10 +836,16 @@ export class RequestStoreService {
       if (logs.length > 0) {
         return logs;
       }
+      if (this.usesBackend()) {
+        return [];
+      }
       const seed = this.seedAuditLogs(this.requestState());
       localStorage.setItem(AUDIT_STORAGE_KEY, JSON.stringify(seed));
       return seed;
     } catch {
+      if (this.usesBackend()) {
+        return [];
+      }
       const seed = this.seedAuditLogs(this.requestState());
       localStorage.setItem(AUDIT_STORAGE_KEY, JSON.stringify(seed));
       return seed;

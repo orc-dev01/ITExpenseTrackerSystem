@@ -1,6 +1,6 @@
 # IT Expense Deployment Setup
 
-This guide prepares the project for a real SQL Server database and a deployable Node/Angular server setup.
+This guide prepares the project for a real SQL Server database and a deployable Node/Angular server setup. It works for an internal-only server that users access on the company LAN or over remote desktop/VPN; the app does not need to be exposed to the public internet.
 
 ## 1. Install Required Software
 
@@ -16,12 +16,38 @@ Install these on the server:
 
 Open SQL Server Management Studio as an administrator.
 
-Run these scripts in order:
+Run these production/internal setup scripts in order:
 
 ```text
 backend/db/01-create-database.sql
 backend/db/02-schema.sql
 backend/db/03-seed-reference-data.sql
+```
+
+`03-seed-reference-data.sql` creates required reference/setup data only. It does not create demo users.
+
+For UAT/demo testing only, optionally run:
+
+```text
+backend/db/06-seed-demo-users.sql
+```
+
+Before real users start entering real requests, remove those demo users with:
+
+```text
+backend/db/07-remove-demo-data.sql
+```
+
+Create real internal users with bcrypt password hashes:
+
+```powershell
+npm run hash:password -- "A-Strong-Temporary-Password"
+```
+
+Paste the generated hash into this template and run it once per user:
+
+```text
+backend/db/08-create-internal-user-template.sql
 ```
 
 If you already created the database before backend SQL integration was added,
@@ -93,7 +119,7 @@ Copy `.env.example` to `.env` on the server and update the values:
 ```text
 NODE_ENV=production
 PORT=5000
-CLIENT_ORIGIN=https://your-real-domain
+CLIENT_ORIGIN=http://your-internal-server-name
 DATA_STORE=sqlserver
 DB_SERVER=your-sql-server
 DB_PORT=1433
@@ -103,6 +129,7 @@ DB_PASSWORD=your-real-password
 DB_ENCRYPT=true
 DB_TRUST_SERVER_CERTIFICATE=false
 JWT_SECRET=your-long-random-secret
+ALLOW_DEV_PASSWORDS=false
 UPLOAD_DIR=C:\ITExpense\uploads
 ```
 
@@ -117,6 +144,7 @@ DB_PASSWORD=the-password-you-used-in-01-create-database.sql
 DB_ENCRYPT=false
 DB_TRUST_SERVER_CERTIFICATE=true
 JWT_SECRET=replace-with-a-long-random-secret
+ALLOW_DEV_PASSWORDS=false
 ```
 
 Create the upload folder:
@@ -204,12 +232,12 @@ In IIS:
    - Match URL: `^api/(.*)`
    - Action type: `Rewrite`
    - Rewrite URL: `http://localhost:5000/api/{R:1}`
-5. Bind the site to HTTPS with a real certificate.
+5. Bind the site to HTTPS with an internal certificate if available. For a small LAN-only pilot, HTTP can work temporarily, but HTTPS is still preferred for passwords and session tokens.
 
-The frontend production environment should point to the same domain:
+The frontend production environment uses the same host as the site:
 
 ```ts
-apiBaseUrl: "https://your-real-domain/api"
+apiBaseUrl: "/api"
 ```
 
 ## 8. Run The API As A Service
@@ -242,24 +270,14 @@ Before go-live:
 - Backend syntax check succeeds.
 - SQL connection check succeeds with `npm.cmd run check:sql`.
 - API health endpoint returns `ok`.
-- Login is converted from dummy passwords to hashed SQL user passwords.
+- Demo users are removed or disabled with `backend/db/07-remove-demo-data.sql`.
+- Real users have bcrypt password hashes and role assignments.
+- `ALLOW_DEV_PASSWORDS=false` in `.env`.
 - File uploads write to `UPLOAD_DIR`.
-- HTTPS is enabled.
+- HTTPS is enabled when the app is accessed over the LAN, VPN, or an internal DNS name.
 - Database backup job is scheduled.
 - Server logs are retained and rotated.
 
-## 10. Next Code Step
+## 10. Current Production Scope
 
-The clean next step is to add a SQL Server data layer:
-
-```text
-backend/db/sql-server.js
-backend/repositories/user.repository.js
-backend/repositories/request.repository.js
-backend/repositories/workflow.repository.js
-backend/repositories/reference.repository.js
-backend/repositories/report.repository.js
-backend/repositories/notification.repository.js
-```
-
-After that, routes can keep the same API endpoints while replacing `dummy-store.js` calls with repository calls.
+The request workflow, authentication, reporting endpoints, and SQL Server data layer are wired to the backend. Some admin/setup and future-module screens are still placeholder views until their write workflows are implemented. Keep those routes limited to Admin users and treat them as read-only/future areas for the first internal production release.

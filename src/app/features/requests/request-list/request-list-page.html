@@ -2,7 +2,6 @@
   class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3"
 >
   <div>
-    <span class="badge rounded-pill text-bg-secondary">LocalStorage Mock</span>
     <h1 class="page-title">Expense Requests</h1>
     <p class="page-subtitle">
       Signed in as {{ user()?.fullName }} with role(s): {{ roles().join(', ') }}
@@ -13,9 +12,6 @@
     @if (canCreate()) {
     <a class="btn btn-primary" routerLink="/requests/new">New Request</a>
     }
-    <button type="button" class="btn btn-outline-secondary" [disabled]="store.isBusy()" (click)="reset()">
-      Reset Mock Data
-    </button>
   </div>
 </section>
 
@@ -152,35 +148,6 @@
       </tbody>
     </table>
   </div>
-</section>
-
-<section class="row g-3 mt-1">
-  <article class="col-12 col-lg-6">
-    <div class="card h-100">
-      <div class="card-body">
-        <h2 class="h6">How To Test</h2>
-        <ul class="text-secondary mb-0">
-          <li>Login as Requester and create a request.</li>
-          <li>Logout and login as Endorser to endorse the request.</li>
-          <li>Logout and login as Approver to approve it.</li>
-          <li>Logout and login as Finance Viewer to close it.</li>
-        </ul>
-      </div>
-    </div>
-  </article>
-
-  <article class="col-12 col-lg-6">
-    <div class="card h-100">
-      <div class="card-body">
-        <h2 class="h6">Storage Keys</h2>
-        <ul class="text-secondary mb-0">
-          <li><code class="app-code">IT_EXPENSE_REQUESTS</code></li>
-          <li><code class="app-code">IT_EXPENSE_AUDIT_LOG</code></li>
-          <li><code class="app-code">IT_EXPENSE_SESSION</code></li>
-        </ul>
-      </div>
-    </div>
-  </article>
 </section>
 
 <app-request-remarks-modal

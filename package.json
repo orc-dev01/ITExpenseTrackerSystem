@@ -11,6 +11,7 @@
     "build": "ng build",
     "check:backend": "node --check backend/server.js && node --check backend/middleware/auth.middleware.js && node --check backend/db/sql-server.js && node --check backend/store/dummy-store.js && node --check backend/store/sql-store.js && node --check backend/routes/auth.routes.js && node --check backend/routes/requests.routes.js && node --check backend/routes/workflow.routes.js && node --check backend/routes/reference.routes.js && node --check backend/routes/reports.routes.js && node --check backend/routes/misc.routes.js",
     "check:sql": "node backend/scripts/test-sql-connection.js",
+    "hash:password": "node backend/scripts/hash-password.js",
     "watch": "ng build --watch --configuration development"
   },
   "dependencies": {
