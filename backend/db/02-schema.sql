@@ -538,3 +538,10 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Notifications_User_Un
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Budgets_Period_Department' AND object_id = OBJECT_ID(N'app.Budgets'))
   CREATE INDEX IX_Budgets_Period_Department ON app.Budgets(PeriodCode, DepartmentId);
 GO
+
+IF USER_ID(N'it_expense_app') IS NOT NULL
+   AND OBJECT_ID(N'app.ExpenseRequestNumberSeq', N'SO') IS NOT NULL
+BEGIN
+  GRANT UPDATE ON OBJECT::app.ExpenseRequestNumberSeq TO it_expense_app;
+END;
+GO

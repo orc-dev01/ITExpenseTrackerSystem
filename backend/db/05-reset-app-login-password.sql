@@ -43,4 +43,9 @@ IF IS_ROLEMEMBER(N'db_datawriter', N'it_expense_app') = 0
 BEGIN
   ALTER ROLE db_datawriter ADD MEMBER it_expense_app;
 END;
+
+IF OBJECT_ID(N'app.ExpenseRequestNumberSeq', N'SO') IS NOT NULL
+BEGIN
+  GRANT UPDATE ON OBJECT::app.ExpenseRequestNumberSeq TO it_expense_app;
+END;
 GO
