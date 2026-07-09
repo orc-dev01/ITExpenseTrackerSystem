@@ -10,6 +10,9 @@ export const WORKFLOW_ROUTES: Routes = [
     data: {
       title: 'Endorsement Queue',
       subtitle: 'Department manager queue for endorse, return, and reject actions.',
+      phase: 'Coming Soon',
+      comingSoon: true,
+      comingSoonMessage: 'The dedicated endorsement queue is not active yet. For now, use the Requests screen to view submitted requests while workflow actions are being completed.',
       mockKey: 'endorsements',
       primaryAction: 'Open Oldest Urgent',
       roles: ['Endorser', 'Admin'],
@@ -23,6 +26,9 @@ export const WORKFLOW_ROUTES: Routes = [
     data: {
       title: 'Approval Queue',
       subtitle: 'Approver queue for final approval, sequential secondary approval, return, and rejection.',
+      phase: 'Coming Soon',
+      comingSoon: true,
+      comingSoonMessage: 'The dedicated approval queue is not active yet. Approval routing and queue actions are still being completed.',
       mockKey: 'approvals',
       primaryAction: 'Review Next Request',
       roles: ['Approver', 'Admin'],
