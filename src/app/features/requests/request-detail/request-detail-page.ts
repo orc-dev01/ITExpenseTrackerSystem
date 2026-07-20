@@ -306,6 +306,7 @@ export class RequestDetailPage {
       },
       error: (error) => {
         this.auditTrailError.set(error?.error?.message ?? 'Could not load latest workflow history.');
+        this.auditTrailLoading.set(false);
       },
       complete: () => {
         this.auditTrailLoading.set(false);

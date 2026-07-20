@@ -23,6 +23,22 @@ npm run build
 
 No dependencies were installed during scaffold creation.
 
+## Installation And VM Handover
+
+For server setup, SQL Server setup, production checks, and VM copy/clone handover steps, see:
+
+```text
+docs/deployment/install-and-vm-handover-guide.md
+```
+
+## User Manual
+
+For role-based user instructions and workflow steps, see:
+
+```text
+docs/user-manual.md
+```
+
 ## Structure
 
 ```text
